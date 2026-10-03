@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { PRIMARY_EVENT_ID, hashHex, timeline, uuidFrom, type EventDef } from './events';
 import { registerAdmin } from './admin';
+import { registerFairness, TAMPER_MODES } from './fairness';
 import { CAPTCHA_OK_TOKEN, challengeView, issueChallenge, runFaults, sendError } from './faults';
 import { TIME_PRESETS, SCENARIOS } from './scenarios';
 import { SseHub } from './sse';
@@ -229,6 +230,8 @@ export function buildApp(world: World = new World()): MockApp {
       sse_clients: hub.clientCount,
       sse_enabled: world.sseEnabled,
       invariants_broken: world.breakInvariants,
+      tamper: world.tamper,
+      tamper_modes: TAMPER_MODES,
       admin_token: 'dev-admin-token (or $ADMIN_TOKEN)',
       otp: OTP,
       captcha_token: CAPTCHA_OK_TOKEN,
@@ -295,6 +298,7 @@ export function buildApp(world: World = new World()): MockApp {
   });
 
   registerAdmin(app, world, hub);
+  registerFairness(app, world);
 
   return { app, world, hub };
 }

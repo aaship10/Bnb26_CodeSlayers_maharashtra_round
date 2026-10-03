@@ -50,5 +50,7 @@ mock-server     Fastify mock with scenarios, fault injection, SSE with resume
 
 Organizer pages live at **/admin** (not linked from the attendee site). The mock's admin token is `dev-admin-token` (set `ADMIN_TOKEN` to change it). The token is kept in sessionStorage only. The rehearsal **reset** button exists only in dev builds, or when built with `VITE_ENABLE_RESET=true`. The Mock panel's **Break invariants** switch demonstrates the red integrity badge.
 
+Fairness: **/events/:id/fairness** (public record + in-browser verifier) and **/events/:id/audit** (audit chain). The demo event's 50,000-entrant draw is reproduced by `tools/ref_draw.py` (Python), the mock (`mock-server/src/draw.ts`) and the browser verifier, and tests check all three agree. The encodings are provisional: see `docs/DRAW_SPEC_PROVISIONAL.md`. The Mock panel's **Fairness data** selector serves tampered data (`entrants`, `results`, `seed`, `audit`) to show the verifier catching it. Regenerate vectors with `python tools/ref_draw.py`.
+
 Dev-only pages: **/__dev/styleguide** (every component) and **/__dev/pow-bench** (proof-of-work speed on this device).
 To test on a phone: `npm run dev:lan`, then open `http://<your-pc-ip>:5173/__dev/pow-bench` (also proves the solver works on plain http, where `crypto.subtle` is missing).

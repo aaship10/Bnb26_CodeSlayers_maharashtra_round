@@ -27,8 +27,8 @@ const routes: RouteObject[] = [
       { path: 'events/:id/ticket', element: <TicketPage /> },
 
       // public fairness (stage 5)
-      { path: 'events/:id/fairness', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).FairnessPage }) },
-      { path: 'events/:id/audit', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).AuditPage }) },
+      { path: 'events/:id/fairness', lazy: () => import('@/features/fairness/FairnessPage') },
+      { path: 'events/:id/audit', lazy: () => import('@/features/fairness/AuditPage') },
 
       // organizer (stage 4) and simulator / results (stage 6): not linked from the attendee nav
       { path: 'admin', lazy: () => import('@/features/admin/AdminHome') },

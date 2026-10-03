@@ -16,6 +16,8 @@ const stateSchema = z.object({
   sse_clients: z.number(),
   sse_enabled: z.boolean(),
   invariants_broken: z.boolean(),
+  tamper: z.string(),
+  tamper_modes: z.array(z.string()),
   admin_token: z.string(),
   otp: z.string(),
   captcha_token: z.string(),
@@ -53,4 +55,5 @@ export const mockApi = {
   dropSse: () => call('/sse/drop', {}),
   setSse: (enabled: boolean) => call('/sse', { enabled }).then(parseState),
   breakInvariants: (broken: boolean) => call('/invariants', { broken }),
+  tamper: (mode: string) => call('/tamper', { mode }),
 };

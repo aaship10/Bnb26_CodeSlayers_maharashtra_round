@@ -1,0 +1,41 @@
+{
+  "event_id": "evt_demo_01",
+  "entrant_rule": "public_id = \"p_\" + sha256(\"fd-demo-entrant:\" + i)[:12 hex], weight 1, i = 0..49999",
+  "server_seed": "207c321cf016d2288190c3aec8fb198e9880684f925465e62bbab95866ce7145",
+  "commitment": "66fa23e435eb9b59a2ae170027e44f5122d61b47850e1d7a383a2b0889988f4d",
+  "beacon": {
+    "source": "mock-beacon",
+    "round": 4280975,
+    "randomness": "a43092282a771817cf60d74428d6729457fd35a9b6265d36c201d60cd2244e4a"
+  },
+  "entrants_count": 50000,
+  "entrants_hash": "e050fb4a56ac7acfb0cb345d9526d4b1766efe2cb941f8e51cfbe57b8aa6215b",
+  "final_seed": "866568a114d6cff5c9187f692abdcc9e4e39476fed28e5ab094ccf8d5ef0fa8b",
+  "inventory": 500,
+  "winners_hash": "af43ccc406cb00216f90d25813ae42ba50989bf37e28bdd2ae8a25f999956bc8",
+  "waitlist_hash": "1c7d917846fb7ee98e5695d935e30909242855150072ea2abf12b0f3a5f71ed4",
+  "first_winners": [
+    "p_c3b81f8eb204",
+    "p_5e86873df643",
+    "p_e1627f263f0e",
+    "p_307c83c0fef1",
+    "p_0af21e0ef71a",
+    "p_3c3f49a640ae",
+    "p_aad25f646198",
+    "p_5220b3adc224",
+    "p_2534291c4174",
+    "p_fa3887d9ca33"
+  ],
+  "first_waitlisted": [
+    "p_89cbe31b5794",
+    "p_04ccbbe5bbfa",
+    "p_ad3e3f451ae1",
+    "p_847ef109f046",
+    "p_20d8be2c3259",
+    "p_80304bbb5d4f",
+    "p_c9173e4b2674",
+    "p_6b4e76398f16",
+    "p_cd8895888731",
+    "p_142e3853d455"
+  ]
+}

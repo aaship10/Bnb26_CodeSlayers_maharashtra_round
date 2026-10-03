@@ -243,6 +243,22 @@ export default function DevPanel() {
                 Break invariants <span className="text-ink-3">(demo the red badge)</span>
               </label>
 
+              <label className="flex items-center gap-2">
+                Fairness data
+                <select
+                  value={state.tamper}
+                  disabled={busy}
+                  onChange={(e) => void run(() => mockApi.tamper(e.target.value))}
+                  className="rounded-sm border border-ink bg-paper-2 px-1 py-0.5"
+                >
+                  {state.tamper_modes.map((m) => (
+                    <option key={m} value={m}>
+                      {m === 'none' ? 'honest' : `tampered: ${m}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <div className="flex flex-wrap gap-1">
                 <button type="button" className={chip} disabled={busy} onClick={() => void run(() => mockApi.dropSse())}>
                   Drop SSE streams ({state.sse_clients})

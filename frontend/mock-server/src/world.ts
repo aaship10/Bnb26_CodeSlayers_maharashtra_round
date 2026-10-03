@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { MockClock } from './clock';
 import {
   EVENTS,
@@ -109,6 +110,8 @@ export class World {
   adminIdempotency = new Map<string, { status: number; body: unknown }>();
   /** Demo switch: make the invariants endpoint report a violation (to show the red banner). */
   breakInvariants = false;
+  /** Fairness tamper mode for demos (see fairness.ts). */
+  tamper: 'none' | 'entrants' | 'results' | 'seed' | 'audit' = 'none';
   createdCounter = 0;
 
   constructor() {
@@ -134,6 +137,7 @@ export class World {
     this.configs = new Map(this.events.map((e) => [e.id, defaultDefences(e.id)]));
     this.adminIdempotency = new Map();
     this.breakInvariants = false;
+    this.tamper = 'none';
     this.createdCounter = 0;
     this.clock.setSpeed(1);
     this.clock.setIso(INITIAL_CLOCK);
@@ -243,7 +247,7 @@ export class World {
       window_opens_at: ev.opens_at,
       window_closes_at: ev.closes_at,
       claim_ttl_s: ev.claim_ttl_s,
-      seed_commitment: hashHex('commit', ev.id),
+      seed_commitment: createHash('sha256').update(createHash('sha256').update(`fd-mock-server-seed:${ev.id}`).digest()).digest('hex'),
       server_now: this.clock.iso(),
     };
   }
