@@ -46,6 +46,12 @@
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
 
+  @media print {
+    body { background: #fff; }
+    header, footer, nav, .no-print, .skip-link { display: none !important; }
+    .ticket { filter: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;

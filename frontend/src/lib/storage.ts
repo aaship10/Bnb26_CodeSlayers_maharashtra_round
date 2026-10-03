@@ -106,6 +106,11 @@ export function getClaimKey(eventId: string): string {
   return fresh;
 }
 
+/** The pending claim key, if a claim was started in this tab session and hasn't succeeded yet. Never creates one. */
+export function peekClaimKey(eventId: string): string | null {
+  return sessionStore.get(claimKey(eventId));
+}
+
 export function clearClaimKey(eventId: string): void {
   sessionStore.remove(claimKey(eventId));
 }

@@ -3,6 +3,9 @@
  * conventions. Every response is validated with the *client's* zod schemas.
  */
 import { createHash } from 'node:crypto';
+import type { AddressInfo } from 'node:net';
+import { streamSse } from '../src/features/live/streamSse';
+import type { SseMessage } from '../src/features/live/sseParser';
 import { buildApp } from './src/app';
 import { solvePow, leadingZeroBits } from './src/pow';
 import { SCENARIOS } from './src/scenarios';
@@ -17,6 +20,7 @@ import {
   sessionResponseSchema,
   statusSchema,
 } from '../src/api/schemas';
+import { adminEventListSchema, adminEventSchema, invariantsSchema, presetListSchema, statsSchema } from '../src/features/admin/schemas';
 
 const EVT = 'evt_demo_01';
 
@@ -299,5 +303,170 @@ describe('pow helper', () => {
     const nonce = solvePow('prefix', 12);
     const digest = createHash('sha256').update(`prefix:${nonce}`).digest();
     expect(leadingZeroBits(digest)).toBeGreaterThanOrEqual(12);
+  });
+});
+
+describe('SSE over a real socket, read by the real client code', () => {
+  const waitUntil = async (cond: () => boolean, ms = 4000) => {
+    const t0 = Date.now();
+    while (!cond()) {
+      if (Date.now() - t0 > ms) throw new Error('timed out waiting');
+      await new Promise((r) => setTimeout(r, 20));
+    }
+  };
+
+  async function serve(scenario: string) {
+    const m = make(scenario);
+    const headers = await signIn(m.app);
+    await m.app.listen({ port: 0, host: '127.0.0.1' });
+    const port = (m.app.server.address() as AddressInfo).port;
+    return { ...m, headers, url: `http://127.0.0.1:${port}/events/${EVT}/stream` };
+  }
+
+  it('pushes a phase change as it happens, then resumes exactly after Last-Event-ID', async () => {
+    const { app, world, headers, url } = await serve('entered-waiting');
+
+    const first: SseMessage[] = [];
+    const ctl = new AbortController();
+    const run = streamSse({ url, headers, lastEventId: null, signal: ctl.signal, onMessage: (m) => first.push(m) }).catch(() => undefined);
+    await waitUntil(() => first.length >= 1);
+    expect(statusSchema.parse(JSON.parse(first[0]!.data))).toMatchObject({ state: 'ENTERED', phase: 'OPEN' });
+
+    world.clock.set(Date.parse('2026-11-01T10:30:02.000Z')); // the draw starts
+    await waitUntil(() => first.length >= 2);
+    expect(statusSchema.parse(JSON.parse(first[1]!.data)).phase).toBe('DRAWING');
+    ctl.abort();
+    await run;
+
+    // While disconnected the result lands.
+    world.clock.set(Date.parse('2026-11-01T10:30:15.000Z'));
+    const lastId = first[first.length - 1]!.id!;
+    const second: SseMessage[] = [];
+    const ctl2 = new AbortController();
+    const run2 = streamSse({ url, headers, lastEventId: lastId, signal: ctl2.signal, onMessage: (m) => second.push(m) }).catch(() => undefined);
+    await waitUntil(() => second.length >= 1);
+    expect(Number(second[0]!.id)).toBe(Number(lastId) + 1); // nothing skipped, nothing repeated
+    expect(statusSchema.parse(JSON.parse(second[0]!.data))).toMatchObject({ state: 'WON', phase: 'CLAIMING' });
+    ctl2.abort();
+    await run2;
+    await app.close();
+  }, 15_000);
+
+  it('refuses a stream without credentials (401) and when SSE is switched off (503)', async () => {
+    const { app, world, headers, url } = await serve('entered-waiting');
+    await expect(
+      streamSse({ url, headers: {}, lastEventId: null, signal: new AbortController().signal, onMessage: () => undefined }),
+    ).rejects.toMatchObject({ code: 'UNAUTHENTICATED', status: 401 });
+
+    world.sseEnabled = false;
+    await expect(
+      streamSse({ url, headers, lastEventId: null, signal: new AbortController().signal, onMessage: () => undefined }),
+    ).rejects.toMatchObject({ code: 'INTERNAL', status: 503 });
+    await app.close();
+  });
+});
+
+describe('organizer API', () => {
+  const ADMIN = { 'X-Admin-Token': 'dev-admin-token' };
+  let n = 0;
+  const key = () => ({ 'Idempotency-Key': `admin-key-${++n}-xxxxxxxx` });
+
+  it('requires the admin token: 401 without, 403 with a wrong one', async () => {
+    const { app } = make('fresh');
+    expect((await app.inject({ method: 'GET', url: '/admin/events' })).statusCode).toBe(401);
+    const wrong = await app.inject({ method: 'GET', url: '/admin/events', headers: { 'X-Admin-Token': 'nope' } });
+    expect(wrong.statusCode).toBe(403);
+    expect(errorBodySchema.parse(wrong.json()).code).toBe('FORBIDDEN');
+    await app.close();
+  });
+
+  it('serves schema-valid presets, events, stats and invariants', async () => {
+    const { app } = make('window-open');
+    expect(presetListSchema.safeParse((await app.inject({ method: 'GET', url: '/admin/defence/presets', headers: ADMIN })).json()).success).toBe(true);
+    expect(adminEventListSchema.safeParse((await app.inject({ method: 'GET', url: '/admin/events', headers: ADMIN })).json()).success).toBe(true);
+    const stats = statsSchema.parse((await app.inject({ method: 'GET', url: `/admin/events/${EVT}/stats`, headers: ADMIN })).json());
+    expect(stats.synthetic).toBe(true); // the demo crowd is simulated and must be badged
+    expect(stats.entrants).toBeGreaterThan(0);
+    const inv = invariantsSchema.parse((await app.inject({ method: 'GET', url: `/admin/events/${EVT}/invariants`, headers: ADMIN })).json());
+    expect(inv).toMatchObject({ oversold: 0, duplicate_users: 0, duplicate_seats: 0, orphaned_holds: 0, passed: true });
+    await app.close();
+  });
+
+  it('creates a draft (hidden from attendees), then walks the whole lifecycle; wrong-phase moves are refused', async () => {
+    const { app } = make('fresh');
+    const body = {
+      name: 'Test drop',
+      inventory: 10,
+      window_opens_at: '2026-11-02T10:00:00.000Z',
+      window_closes_at: '2026-11-02T10:30:00.000Z',
+      claim_ttl_s: 600,
+      mode: 'LOTTERY',
+      config: { defences: presetListSchema.parse((await app.inject({ method: 'GET', url: '/admin/defence/presets', headers: ADMIN })).json())[1]!.defences },
+    };
+    const created = await app.inject({ method: 'POST', url: '/admin/events', headers: { ...ADMIN, ...key() }, payload: body });
+    expect(created.statusCode).toBe(201);
+    const ev = adminEventSchema.parse(created.json());
+    expect(ev.phase).toBe('DRAFT');
+    const publicList = eventListSchema.parse((await app.inject({ method: 'GET', url: '/events' })).json());
+    expect(publicList.some((e) => e.id === ev.id)).toBe(false);
+
+    const early = await app.inject({ method: 'POST', url: `/admin/events/${ev.id}/draw`, headers: { ...ADMIN, ...key() } });
+    expect(early.statusCode).toBe(409);
+
+    for (const [action, phase] of [
+      ['schedule', 'SCHEDULED'],
+      ['open', 'OPEN'],
+      ['close', 'DRAWING'],
+      ['draw', 'CLAIMING'],
+    ] as const) {
+      const res = await app.inject({ method: 'POST', url: `/admin/events/${ev.id}/${action}`, headers: { ...ADMIN, ...key() } });
+      expect(res.statusCode, action).toBe(200);
+      expect(adminEventSchema.parse(res.json()).phase).toBe(phase);
+    }
+    await app.close();
+  });
+
+  it('admin writes need an Idempotency-Key and replay the first answer for a repeated key', async () => {
+    const { app } = make('fresh');
+    const missing = await app.inject({ method: 'POST', url: `/admin/events/${EVT}/open`, headers: ADMIN });
+    expect(missing.statusCode).toBe(400);
+    const k = key();
+    const first = await app.inject({ method: 'POST', url: `/admin/events/${EVT}/open`, headers: { ...ADMIN, ...k } });
+    expect(adminEventSchema.parse(first.json()).phase).toBe('OPEN');
+    const again = await app.inject({ method: 'POST', url: `/admin/events/${EVT}/open`, headers: { ...ADMIN, ...k } });
+    expect(again.statusCode).toBe(200); // replayed, not "already open"
+    const fresh = await app.inject({ method: 'POST', url: `/admin/events/${EVT}/open`, headers: { ...ADMIN, ...key() } });
+    expect(fresh.statusCode).toBe(409);
+    await app.close();
+  });
+
+  it('validates defence config patches and applies valid ones', async () => {
+    const { app } = make('fresh');
+    const bad = await app.inject({ method: 'PATCH', url: `/admin/events/${EVT}/config`, headers: { ...ADMIN, ...key() }, payload: { defences: { preset: 'all', layers: {} } } });
+    expect(bad.statusCode).toBe(400);
+    const all = presetListSchema.parse((await app.inject({ method: 'GET', url: '/admin/defence/presets', headers: ADMIN })).json()).find((p) => p.id === 'all')!;
+    const ok = await app.inject({ method: 'PATCH', url: `/admin/events/${EVT}/config`, headers: { ...ADMIN, ...key() }, payload: { defences: all.defences } });
+    expect(adminEventSchema.parse(ok.json()).config.defences.preset).toBe('all');
+    await app.close();
+  });
+
+  it('reset returns the event to draft and clears entries', async () => {
+    const { app, world } = make('window-open');
+    const headers = await signIn(app);
+    await app.inject({ method: 'POST', url: `/events/${EVT}/enter`, headers });
+    expect([...world.entries.keys()].some((k) => k.endsWith(EVT))).toBe(true);
+    const res = await app.inject({ method: 'POST', url: `/admin/events/${EVT}/reset`, headers: { ...ADMIN, ...key() } });
+    expect(adminEventSchema.parse(res.json()).phase).toBe('DRAFT');
+    expect([...world.entries.keys()].some((k) => k.endsWith(EVT))).toBe(false);
+    await app.close();
+  });
+
+  it('the demo switch makes invariants fail loudly', async () => {
+    const { app } = make('fresh');
+    await app.inject({ method: 'POST', url: '/__mock/invariants', payload: { broken: true } });
+    const inv = invariantsSchema.parse((await app.inject({ method: 'GET', url: `/admin/events/${EVT}/invariants`, headers: ADMIN })).json());
+    expect(inv.passed).toBe(false);
+    expect(inv.oversold).toBeGreaterThan(0);
+    await app.close();
   });
 });

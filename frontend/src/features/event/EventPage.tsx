@@ -6,7 +6,7 @@ import { api, describeError } from '@/api';
 import { queryKeys } from '@/api/queryClient';
 import type { EventInfo, Phase } from '@/api/schemas';
 import { useAnnounce } from '@/app/Announcer';
-import { withJitter } from '@/lib/backoff';
+import { pollInterval } from '@/api/polling';
 import { formatCount, formatWindow } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useSession } from '@/state/session';
@@ -18,6 +18,8 @@ import { Ticket } from '@/ui/Ticket';
 import { Countdown } from './Countdown';
 import { EnterCard } from './EnterCard';
 import { useDeadlineRefetch } from './useDeadlineRefetch';
+
+const drawingPoll = pollInterval(6000, 4000);
 
 const PHASE_ANNOUNCEMENT: Partial<Record<Phase, string>> = {
   OPEN: 'Entries are now open.',
@@ -85,7 +87,7 @@ export function EventPage() {
     queryFn: ({ signal }) => api.events.get(id, signal),
     enabled: id.length > 0,
     // While the draw is running, check back every 6 to 10 s (jittered). Paused when the tab is hidden.
-    refetchInterval: (q) => (q.state.data?.phase === 'DRAWING' ? withJitter(6000, 4000) : false),
+    refetchInterval: (q) => (q.state.data?.phase === 'DRAWING' ? drawingPoll(q) : false),
   });
   const event = eventQuery.data;
 

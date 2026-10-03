@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
-import { EVENTS, PRIMARY_EVENT_ID, findEvent, hashHex, timeline, uuidFrom, type EventDef } from './events';
+import { PRIMARY_EVENT_ID, hashHex, timeline, uuidFrom, type EventDef } from './events';
+import { registerAdmin } from './admin';
 import { CAPTCHA_OK_TOKEN, challengeView, issueChallenge, runFaults, sendError } from './faults';
 import { TIME_PRESETS, SCENARIOS } from './scenarios';
 import { SseHub } from './sse';
@@ -59,7 +60,7 @@ export function buildApp(world: World = new World()): MockApp {
 
   function eventOr404(req: FastifyRequest, reply: FastifyReply): EventDef | null {
     const id = (req.params as { id: string }).id;
-    const ev = findEvent(id);
+    const ev = world.findEvent(id);
     if (!ev) {
       sendError(reply, 404, 'NOT_FOUND', `No such event: ${id}`);
       return null;
@@ -118,7 +119,7 @@ export function buildApp(world: World = new World()): MockApp {
     const user = authenticate(req, reply);
     if (!user) return;
     const eventId = (req.body as { event_id?: unknown } | undefined)?.event_id;
-    if (typeof eventId !== 'string' || !findEvent(eventId)) {
+    if (typeof eventId !== 'string' || !world.findEvent(eventId)) {
       return sendError(reply, 400, 'VALIDATION_ERROR', 'event_id is required', { field: 'event_id' });
     }
     const wantsCaptcha = [...world.faults.keys()].some((k) => k.endsWith(':challenge_captcha'));
@@ -127,7 +128,8 @@ export function buildApp(world: World = new World()): MockApp {
 
   /* ---------------------------------------------------------------- events */
 
-  app.get('/events', async () => EVENTS.map((e) => world.eventView(e)));
+  // DRAFT events are the organizer's business; attendees don't see them.
+  app.get('/events', async () => world.events.filter((e) => world.phaseOf(e) !== 'DRAFT').map((e) => world.eventView(e)));
 
   app.get('/events/:id', async (req, reply) => {
     const ev = eventOr404(req, reply);
@@ -203,6 +205,7 @@ export function buildApp(world: World = new World()): MockApp {
     const ev = eventOr404(req, reply);
     if (!ev) return;
     if (await runFaults(world, 'status', req, reply, { eventId: ev.id, userId: user.id })) return;
+    if (!world.sseEnabled) return sendError(reply, 503, 'INTERNAL', 'Live updates are switched off (mock)');
 
     const raw = req.headers['last-event-id'];
     const parsed = typeof raw === 'string' ? Number.parseInt(raw, 10) : NaN;
@@ -213,7 +216,7 @@ export function buildApp(world: World = new World()): MockApp {
   /* ------------------------------------------------- mock control (dev only) */
 
   const controlState = () => {
-    const t = timeline(findEvent(PRIMARY_EVENT_ID)!);
+    const t = timeline(world.findEvent(PRIMARY_EVENT_ID)!);
     return {
       server_now: world.clock.iso(),
       speed: world.clock.speed,
@@ -224,6 +227,9 @@ export function buildApp(world: World = new World()): MockApp {
       fault_targets: FAULT_TARGETS,
       fault_kinds: FAULT_KINDS,
       sse_clients: hub.clientCount,
+      sse_enabled: world.sseEnabled,
+      invariants_broken: world.breakInvariants,
+      admin_token: 'dev-admin-token (or $ADMIN_TOKEN)',
       otp: OTP,
       captcha_token: CAPTCHA_OK_TOKEN,
       timeline: {
@@ -279,6 +285,16 @@ export function buildApp(world: World = new World()): MockApp {
   });
 
   app.post('/__mock/sse/drop', async () => ({ dropped: hub.dropAll() }));
+
+  app.post('/__mock/sse', async (req, reply) => {
+    const enabled = (req.body as { enabled?: unknown } | undefined)?.enabled;
+    if (typeof enabled !== 'boolean') return sendError(reply, 400, 'VALIDATION_ERROR', 'enabled must be a boolean');
+    world.sseEnabled = enabled;
+    if (!enabled) hub.dropAll();
+    return controlState();
+  });
+
+  registerAdmin(app, world, hub);
 
   return { app, world, hub };
 }

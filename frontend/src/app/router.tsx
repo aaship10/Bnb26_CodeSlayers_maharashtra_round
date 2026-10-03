@@ -2,9 +2,11 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from './Layout';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { RegisterPage } from '@/features/auth/RegisterPage';
 import { EventPage } from '@/features/event/EventPage';
+import { StatusPage } from '@/features/status/StatusPage';
+import { ClaimPage } from '@/features/claim/ClaimPage';
+import { TicketPage } from '@/features/ticket/TicketPage';
 
 /**
  * Route table. Attendee screens are in the main bundle; organizer, fairness,
@@ -20,18 +22,17 @@ const routes: RouteObject[] = [
       // attendee
       { path: 'register', element: <RegisterPage /> },
       { path: 'events/:id', element: <EventPage /> },
-      // stage 3
-      { path: 'events/:id/status', element: <ComingSoon title="Your status" stage={3}>Live updates over SSE, with a polite polling fallback.</ComingSoon> },
-      { path: 'events/:id/claim', element: <ComingSoon title="Claim your seat" stage={3}>Hold timer and a safe, repeatable claim.</ComingSoon> },
-      { path: 'events/:id/ticket', element: <ComingSoon title="Your ticket" stage={3}>Seat number and ticket code.</ComingSoon> },
+      { path: 'events/:id/status', element: <StatusPage /> },
+      { path: 'events/:id/claim', element: <ClaimPage /> },
+      { path: 'events/:id/ticket', element: <TicketPage /> },
 
       // public fairness (stage 5)
       { path: 'events/:id/fairness', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).FairnessPage }) },
       { path: 'events/:id/audit', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).AuditPage }) },
 
       // organizer (stage 4) and simulator / results (stage 6): not linked from the attendee nav
-      { path: 'admin', lazy: async () => ({ Component: (await import('@/features/admin/pages')).AdminHome }) },
-      { path: 'admin/events/:id', lazy: async () => ({ Component: (await import('@/features/admin/pages')).AdminEvent }) },
+      { path: 'admin', lazy: () => import('@/features/admin/AdminHome') },
+      { path: 'admin/events/:id', lazy: () => import('@/features/admin/AdminEventPage') },
       { path: 'admin/sim', lazy: async () => ({ Component: (await import('@/features/sim/pages')).SimPanel }) },
       { path: 'admin/sim/runs/:id', lazy: async () => ({ Component: (await import('@/features/sim/pages')).RunResults }) },
       { path: 'admin/sim/compare', lazy: async () => ({ Component: (await import('@/features/sim/pages')).Compare }) },

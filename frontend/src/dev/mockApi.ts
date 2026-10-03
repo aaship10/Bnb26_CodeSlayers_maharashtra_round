@@ -14,6 +14,9 @@ const stateSchema = z.object({
   fault_targets: z.array(z.string()),
   fault_kinds: z.array(z.string()),
   sse_clients: z.number(),
+  sse_enabled: z.boolean(),
+  invariants_broken: z.boolean(),
+  admin_token: z.string(),
   otp: z.string(),
   captcha_token: z.string(),
   timeline: z.object({ opens: z.string(), closes: z.string(), hold_ends: z.string() }),
@@ -48,4 +51,6 @@ export const mockApi = {
   clockSpeed: (speed: number) => call('/clock', { speed }).then(parseState).then(resync),
   faults: (faults: string[]) => call('/faults', { faults }).then(parseState),
   dropSse: () => call('/sse/drop', {}),
+  setSse: (enabled: boolean) => call('/sse', { enabled }).then(parseState),
+  breakInvariants: (broken: boolean) => call('/invariants', { broken }),
 };

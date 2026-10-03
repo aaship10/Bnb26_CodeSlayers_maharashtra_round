@@ -97,10 +97,14 @@ export class SseHub {
     }
   }
 
-  /** Simulate a dropped connection. Clients should reconnect and resume. */
+  /**
+   * Simulate the server dropping every stream. Ends the responses (rather than
+   * destroying sockets) so the close also propagates through proxies such as
+   * Vite's dev proxy; half-open sockets are covered by the client's watchdog.
+   */
   dropAll(): number {
     const n = this.clients.size;
-    for (const c of this.clients) c.res.destroy();
+    for (const c of this.clients) c.res.end();
     this.clients.clear();
     return n;
   }

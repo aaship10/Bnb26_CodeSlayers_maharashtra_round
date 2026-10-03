@@ -27,7 +27,8 @@ In dev a floating **Mock** button opens the control panel:
 - **Scenarios** jump to a state: before the window, window open, entered, drawing, won with hold, hold expiring, expired, waitlisted, lost, claimed, plus failure setups (429, PoW or CAPTCHA challenge, rejected, flaky network, challenge on claim).
 - **Server clock** time-travels to named moments, advances, pauses, or runs 10x or 60x. The mock phase is derived from this clock, so every phase and user state is reachable.
 - **Inject failures** per endpoint (`enter`, `claim`, `status`): rate limit, PoW, CAPTCHA, rejected, network failure, slow, 500.
-- **Drop SSE streams** to exercise resume.
+- **Drop SSE streams** to exercise resume, and **Live stream (SSE) enabled** off to force the polling fallback (also the `SSE unavailable (polling)` scenario).
+- Time-travel through the panel, not by calling `/__mock/clock` directly: the panel also re-syncs the page's server-clock estimate, so countdowns and hold timers stay right.
 - Sign-up code for any email is **123456**. The mock CAPTCHA token is `mock-captcha-ok`.
 - Proof-of-work difficulty defaults to 18 bits (about a quarter of a second on a desktop). For a more visible "Verifying you're human..." in a demo, start the mock with `MOCK_POW_BITS=22 npm run mock`.
 
@@ -46,6 +47,8 @@ src/features    event, admin, fairness, sim (code-split)
 src/dev         styleguide + mock panel (dev builds only, not in dist/)
 mock-server     Fastify mock with scenarios, fault injection, SSE with resume
 ```
+
+Organizer pages live at **/admin** (not linked from the attendee site). The mock's admin token is `dev-admin-token` (set `ADMIN_TOKEN` to change it). The token is kept in sessionStorage only. The rehearsal **reset** button exists only in dev builds, or when built with `VITE_ENABLE_RESET=true`. The Mock panel's **Break invariants** switch demonstrates the red integrity badge.
 
 Dev-only pages: **/__dev/styleguide** (every component) and **/__dev/pow-bench** (proof-of-work speed on this device).
 To test on a phone: `npm run dev:lan`, then open `http://<your-pc-ip>:5173/__dev/pow-bench` (also proves the solver works on plain http, where `crypto.subtle` is missing).

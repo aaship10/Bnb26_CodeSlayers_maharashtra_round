@@ -228,6 +228,21 @@ export default function DevPanel() {
                 </p>
               </div>
 
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={state.sse_enabled} disabled={busy} onChange={(e) => void run(() => mockApi.setSse(e.target.checked))} />
+                Live stream (SSE) enabled <span className="text-ink-3">(off forces polling)</span>
+              </label>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={state.invariants_broken}
+                  disabled={busy}
+                  onChange={(e) => void run(() => mockApi.breakInvariants(e.target.checked))}
+                />
+                Break invariants <span className="text-ink-3">(demo the red badge)</span>
+              </label>
+
               <div className="flex flex-wrap gap-1">
                 <button type="button" className={chip} disabled={busy} onClick={() => void run(() => mockApi.dropSse())}>
                   Drop SSE streams ({state.sse_clients})
@@ -241,6 +256,8 @@ export default function DevPanel() {
                 Sign-up code for any email: <b className="text-ink">{state.otp}</b>
                 <br />
                 Mock CAPTCHA token: <b className="text-ink">{state.captcha_token}</b>
+                <br />
+                Admin token: <b className="text-ink">{state.admin_token}</b> (organizer pages at /admin)
               </p>
             </div>
           )}

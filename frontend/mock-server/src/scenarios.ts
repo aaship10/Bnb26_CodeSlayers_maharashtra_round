@@ -48,7 +48,7 @@ export const SCENARIOS: Scenario[] = [
     group: 'Timeline',
     apply: (w) => {
       at(w, T.opens - 15 * MIN);
-      w.phaseOverride = 'DRAFT';
+      w.setManualPhase(PRIMARY_EVENT_ID, 'DRAFT');
     },
   },
   {
@@ -209,6 +209,17 @@ export const SCENARIOS: Scenario[] = [
       w.autoEnter = true;
       w.armFault('enter:network_fail');
       w.armFault('status:network_fail');
+    },
+  },
+  {
+    id: 'no-sse',
+    name: 'SSE unavailable (polling)',
+    description: 'Entered; the live stream is off, so status falls back to polling every 5 to 10 s.',
+    group: 'Failures',
+    apply: (w) => {
+      at(w, T.closes - 30 * SEC);
+      w.autoEnter = true;
+      w.sseEnabled = false;
     },
   },
   {

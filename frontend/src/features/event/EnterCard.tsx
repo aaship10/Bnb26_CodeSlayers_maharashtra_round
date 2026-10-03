@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { describeError } from '@/api';
 import type { EventInfo, StatusResponse } from '@/api/schemas';
@@ -10,29 +9,12 @@ import { Button, ButtonLink } from '@/ui/Button';
 import { Skeleton } from '@/ui/Skeleton';
 import { deriveEnterView } from './enterView';
 import { useEnter } from './useEnter';
+import { useCountdownSeconds } from '@/lib/useCountdownSeconds';
 
 interface Props {
   event: EventInfo;
   status: StatusResponse | undefined;
   statusLoading: boolean;
-}
-
-/** After a 429 the button stays disabled for the server's Retry-After, with a visible countdown. */
-function useRetryCountdown(retryAfterMs: number | undefined, resetKey: unknown): number {
-  const [left, setLeft] = useState(0);
-  useEffect(() => {
-    if (!retryAfterMs) {
-      setLeft(0);
-      return;
-    }
-    // A duration from the server, counted down locally: no clock comparison involved.
-    const endsAt = performance.now() + retryAfterMs;
-    const tick = () => setLeft(Math.max(0, Math.ceil((endsAt - performance.now()) / 1000)));
-    tick();
-    const id = setInterval(tick, 250);
-    return () => clearInterval(id);
-  }, [retryAfterMs, resetKey]);
-  return left;
 }
 
 export function EnterCard({ event, status, statusLoading }: Props) {
@@ -50,7 +32,7 @@ export function EnterCard({ event, status, statusLoading }: Props) {
   });
 
   const err = enter.error ? describeError(enter.error) : null;
-  const waitS = useRetryCountdown(err?.code === 'RATE_LIMITED' ? err.retryAfterMs : undefined, enter.error);
+  const waitS = useCountdownSeconds(err?.code === 'RATE_LIMITED' ? err.retryAfterMs : undefined, enter.error);
   const rateLimited = err?.code === 'RATE_LIMITED';
   const blocked = rateLimited && waitS > 0;
   const busy = enter.phase === 'sending' || enter.phase === 'retrying';

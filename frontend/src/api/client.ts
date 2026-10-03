@@ -53,6 +53,30 @@ function parseRetryAfter(header: string | null, details?: Record<string, unknown
   return undefined;
 }
 
+/** Build the ApiError for a non-2xx response whose body has already been parsed (or failed to parse). */
+function errorFromBody(res: Response, json: unknown): ApiError {
+  const parsed = errorBodySchema.safeParse(json);
+  if (parsed.success) {
+    const { code, message, details } = parsed.data;
+    return new ApiError(code, message, res.status, details, parseRetryAfter(res.headers.get('Retry-After'), details));
+  }
+  // Not our error shape (e.g. a proxy's HTML 502): map by status, still visibly.
+  const code = FALLBACK_CODES[res.status] ?? (res.status >= 500 ? 'INTERNAL' : 'UNKNOWN');
+  return new ApiError(code, `HTTP ${res.status}`, res.status, undefined, parseRetryAfter(res.headers.get('Retry-After')));
+}
+
+/** Turn any non-2xx Response into an ApiError. Used by callers that don't go through request(), e.g. the SSE reader. */
+export async function apiErrorFromResponse(res: Response): Promise<ApiError> {
+  const text = await res.text().catch(() => '');
+  let json: unknown;
+  try {
+    json = text ? JSON.parse(text) : undefined;
+  } catch {
+    json = undefined;
+  }
+  return errorFromBody(res, json);
+}
+
 export class ApiClient {
   private readonly fetchImpl: typeof fetch;
 
@@ -62,6 +86,19 @@ export class ApiClient {
 
   get clock(): ServerClock {
     return this.cfg.clock;
+  }
+
+  get baseUrl(): string {
+    return this.cfg.baseUrl;
+  }
+
+  /** Identity headers (X-Device-Id, Authorization) as a plain object, for transports outside request(). */
+  identityHeaders(): Record<string, string> {
+    const out: Record<string, string> = {};
+    this.buildHeaders({}).forEach((v, k) => {
+      if (k !== 'accept') out[k] = v;
+    });
+    return out;
   }
 
   buildHeaders(opts: Pick<RequestOptions<unknown>, 'auth' | 'headers' | 'idempotencyKey' | 'challenge' | 'body'>): Headers {
@@ -129,16 +166,7 @@ export class ApiClient {
       }
     }
 
-    if (!res.ok) {
-      const parsed = errorBodySchema.safeParse(json);
-      if (parsed.success) {
-        const { code, message, details } = parsed.data;
-        throw new ApiError(code, message, res.status, details, parseRetryAfter(res.headers.get('Retry-After'), details));
-      }
-      // Not our error shape (e.g. a proxy's HTML 502): map by status, still visibly.
-      const code = FALLBACK_CODES[res.status] ?? (res.status >= 500 ? 'INTERNAL' : 'UNKNOWN');
-      throw new ApiError(code, `HTTP ${res.status}`, res.status, undefined, parseRetryAfter(res.headers.get('Retry-After')));
-    }
+    if (!res.ok) throw errorFromBody(res, json);
 
     if (!jsonOk) {
       throw new ApiError('SCHEMA_MISMATCH', 'Response was not valid JSON', res.status);
