@@ -1,0 +1,88 @@
+/*
+ * Bespoke pieces that don't read well as utility soup.
+ * The ticket: ink outline + hard shadow + semicircle notches that follow the
+ * outline. Outline = an ink "shell" cut with notch radius R, with a paper body
+ * inside it cut with R+2 centred on the same point, which leaves a 2px ink ring.
+ */
+@layer components {
+  .ticket {
+    --notch-r: 11px;
+    --stub-h: 4.75rem;
+    --ticket-bg: var(--color-paper-2);
+    position: relative;
+    filter: drop-shadow(0 5px 0 var(--color-ink));
+    transition: transform 120ms ease, filter 120ms ease;
+  }
+  a.ticket:hover, .ticket[data-interactive="true"]:hover {
+    transform: translateY(-3px);
+    filter: drop-shadow(0 8px 0 var(--color-ink));
+  }
+
+  .ticket-shell {
+    background: var(--color-ink);
+    padding: 2px;
+    border-radius: 20px;
+    --y: calc(100% - var(--stub-h) - 2px);
+    -webkit-mask:
+      radial-gradient(circle var(--notch-r) at 0 var(--y), #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--notch-r) at 100% var(--y), #0000 97%, #000) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle var(--notch-r) at 0 var(--y), #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--notch-r) at 100% var(--y), #0000 97%, #000) right / 51% 100% no-repeat;
+  }
+  .ticket[data-stub="false"] .ticket-shell { -webkit-mask: none; mask: none; }
+
+  .ticket-body {
+    background: var(--ticket-bg);
+    border-radius: 18px;
+    overflow: hidden;
+    --y: calc(100% - var(--stub-h));
+    --r2: calc(var(--notch-r) + 2px);
+    -webkit-mask:
+      radial-gradient(circle var(--r2) at -2px var(--y), #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--r2) at calc(100% + 2px) var(--y), #0000 97%, #000) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle var(--r2) at -2px var(--y), #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--r2) at calc(100% + 2px) var(--y), #0000 97%, #000) right / 51% 100% no-repeat;
+  }
+  .ticket[data-stub="false"] .ticket-body { -webkit-mask: none; mask: none; }
+
+  .ticket-stub {
+    position: relative;
+    height: var(--stub-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 1.25rem;
+    background: var(--ticket-stub-bg, var(--color-paper-3));
+  }
+  .ticket-stub::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: calc(var(--notch-r) + 8px);
+    right: calc(var(--notch-r) + 8px);
+    border-top: 2px dashed var(--color-ink);
+  }
+
+  /* halftone dot field for hero backgrounds; cheap, no image weight */
+  .halftone {
+    background-image: radial-gradient(var(--color-rule) 1.4px, transparent 1.6px);
+    background-size: 16px 16px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 100;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: top 120ms ease;
+  }
+  .skip-link:focus { top: 1rem; }
+}

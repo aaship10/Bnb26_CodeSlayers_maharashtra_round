@@ -1,0 +1,92 @@
+/*
+ * Fair Drop design tokens. Single source of truth: Tailwind's default theme is
+ * wiped (colors, radii, shadows) so only these values exist.
+ * src/styles/tokens.test.ts parses this file and asserts WCAG contrast for the
+ * pairings we actually use. Change a colour here and that test tells you if it broke.
+ * Light theme only (a projector in a bright room is the target).
+ */
+@theme {
+  --color-*: initial;
+
+  /* surfaces */
+  --color-paper: #f7f1e3;       /* page */
+  --color-paper-2: #fffbf1;     /* raised cards, inputs */
+  --color-paper-3: #ede5d2;     /* sunken / table stripes */
+  --color-rule: #d8cdb4;        /* hairlines */
+
+  /* ink */
+  --color-ink: #1c1a17;         /* text + outlines + hard shadows */
+  --color-ink-2: #403b33;       /* secondary text */
+  --color-ink-3: #655e52;       /* muted text (still AA on paper-3) */
+
+  /* hero accent: tomato. Fill for buttons/balls, deep for text */
+  --color-tomato: #d93a22;
+  --color-tomato-deep: #b02a15;
+  --color-tomato-tint: #ffd9cf;
+
+  /* cobalt: links, info, focus */
+  --color-cobalt: #2441d6;
+  --color-cobalt-tint: #dce3ff;
+
+  /* sun: the clock colour (hold timers, "pay attention") */
+  --color-sun: #ffc933;
+  --color-sun-tint: #fff0c2;
+
+  /* mint/pine: success. Mint is a fill, pine is the text colour */
+  --color-mint: #5fd3a6;
+  --color-pine: #0f6b4b;
+  --color-mint-tint: #d3f3e5;
+
+  --color-white: #ffffff;
+
+  /* type */
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.4rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6rem;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.9rem;
+  --text-2xl: 1.875rem;
+  --text-2xl--line-height: 2.2rem;
+  --text-3xl: 2.375rem;
+  --text-3xl--line-height: 2.6rem;
+  --text-4xl: 3.25rem;
+  --text-4xl--line-height: 3.3rem;
+  --text-5xl: 4.25rem;
+  --text-5xl--line-height: 4.1rem;
+
+  /* shape */
+  --radius-*: initial;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+
+  /* hard shadows that drop straight down: keys and tickets resting on a table.
+     Straight down (not diagonal) keeps ticket notches symmetric. */
+  --shadow-*: initial;
+  --shadow-pop-sm: 0 2px 0 0 var(--color-ink);
+  --shadow-pop: 0 4px 0 0 var(--color-ink);
+  --shadow-pop-lg: 0 7px 0 0 var(--color-ink);
+
+  --animate-bob: bob 5s ease-in-out infinite;
+  --animate-spin-slow: spin 0.9s linear infinite;
+  --animate-stamp: stamp 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+    50% { transform: translateY(-7px) rotate(calc(var(--tilt, 0deg) + 3deg)); }
+  }
+  @keyframes stamp {
+    0% { transform: scale(1.5) rotate(-8deg); opacity: 0; }
+    100% { transform: scale(1) rotate(var(--stamp-tilt, -3deg)); opacity: 1; }
+  }
+}
