@@ -31,5 +31,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: 'es2020',
+    // Never inline fonts as data: URIs; the production CSP (font-src 'self') blocks them.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
   },
 });

@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest }
 import { PRIMARY_EVENT_ID, hashHex, timeline, uuidFrom, type EventDef } from './events';
 import { registerAdmin } from './admin';
 import { registerFairness, TAMPER_MODES } from './fairness';
+import { registerSim } from './sim';
 import { CAPTCHA_OK_TOKEN, challengeView, issueChallenge, runFaults, sendError } from './faults';
 import { TIME_PRESETS, SCENARIOS } from './scenarios';
 import { SseHub } from './sse';
@@ -31,7 +32,7 @@ function decodeToken(token: string): User | null {
   }
 }
 
-export function buildApp(world: World = new World()): MockApp {
+export function buildApp(world: World = new World(), opts: { simSpeed?: number } = {}): MockApp {
   const app = Fastify({ logger: false });
   const hub = new SseHub(world);
 
@@ -299,6 +300,7 @@ export function buildApp(world: World = new World()): MockApp {
 
   registerAdmin(app, world, hub);
   registerFairness(app, world);
+  registerSim(app, { speed: opts.simSpeed });
 
   return { app, world, hub };
 }

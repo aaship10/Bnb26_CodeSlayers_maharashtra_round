@@ -8,7 +8,11 @@ npm run dev:all     # web on :5173 and the mock server on :8787
 npm test            # unit, component and mock-contract tests
 npm run typecheck
 npm run build       # typecheck + production build into dist/
+npm run e2e         # build, then Playwright (29 tests, desktop + phone, incl. axe and CSP)
+npm run smoke -- --base http://localhost:8080 --dev-user <uuid> --admin-token <token>   # contract check of a running stack
 ```
+
+Deployment behind nginx: see `deploy/README.md`. Demo materials: `../docs/DEMO_SCRIPT.md`, `SLIDES_OUTLINE.md`, `QA_PREP.md`, `PREFLIGHT_CHECKLIST.md`.
 
 Open **http://localhost:5173** (use `localhost`; on Windows Vite binds IPv6 `::1`).
 
@@ -51,6 +55,8 @@ mock-server     Fastify mock with scenarios, fault injection, SSE with resume
 Organizer pages live at **/admin** (not linked from the attendee site). The mock's admin token is `dev-admin-token` (set `ADMIN_TOKEN` to change it). The token is kept in sessionStorage only. The rehearsal **reset** button exists only in dev builds, or when built with `VITE_ENABLE_RESET=true`. The Mock panel's **Break invariants** switch demonstrates the red integrity badge.
 
 Fairness: **/events/:id/fairness** (public record + in-browser verifier) and **/events/:id/audit** (audit chain). The demo event's 50,000-entrant draw is reproduced by `tools/ref_draw.py` (Python), the mock (`mock-server/src/draw.ts`) and the browser verifier, and tests check all three agree. The encodings are provisional: see `docs/DRAW_SPEC_PROVISIONAL.md`. The Mock panel's **Fairness data** selector serves tampered data (`entrants`, `results`, `seed`, `audit`) to show the verifier catching it. Regenerate vectors with `python tools/ref_draw.py`.
+
+Simulator and evidence: **/admin/sim** (scenarios, generated parameter form, demo presets 1–5, live progress), **/admin/sim/runs/:id** (results, every number with its 95% CI and n), **/admin/sim/compare** (FCFS vs Fair Drop on shared axes) and **/admin/sim/experiments** (Recharts with CI bands, table view, static-PNG fallback). The mock simulator is synthetic and says so on every screen; set `MOCK_SIM_SPEED=5` to make runs finish faster.
 
 Dev-only pages: **/__dev/styleguide** (every component) and **/__dev/pow-bench** (proof-of-work speed on this device).
 To test on a phone: `npm run dev:lan`, then open `http://<your-pc-ip>:5173/__dev/pow-bench` (also proves the solver works on plain http, where `crypto.subtle` is missing).

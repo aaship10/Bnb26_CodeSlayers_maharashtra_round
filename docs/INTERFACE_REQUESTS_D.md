@@ -37,8 +37,20 @@ Things the frontend assumes or needs from the other members. Each item says what
 | B7 | `Retry-After` plus `details.retry_after_ms` on every 429. | Used for the on-screen "try again in N seconds" and for backoff. |
 | B8 | Which CAPTCHA provider will the stack use (hCaptcha, Turnstile, reCAPTCHA)? And what is the **accessible alternative** for people who can't use it? | Only a `mock` provider is wired; any other provider shows "This check isn't available here". The widget text promises organisers will help, so that route has to exist. |
 | B9 | PoW difficulty: what `difficulty_bits` will be used in production, and is it per-request or adaptive? | The solver handles any value; measured about 1.2M attempts/s on a desktop browser worker (18 bits is about 0.2 s there, expect 5 to 10x slower on a mid-range phone; run `/__dev/pow-bench` on a real phone). |
+| B11 | **nginx:** the proposed config in `frontend/deploy/nginx/` (with `frontend/deploy/README.md`) covers B1 and B2 plus caching, gzip and the security headers. It's tested on nginx 1.28 with the full e2e suite. Please merge it into `infra/` and rename the upstreams. | Until then the same layout runs through `vite preview`. |
+| B12 | **CSP:** `script-src 'self'` and `font-src 'self'` are enforced. Anything B adds that loads third-party code (a CAPTCHA, analytics) needs its origin listed. | Tested: zero violations on the main screens. |
 | B10 | Prefix length: is it bounded? | The solver is correct for any length (multi-block tested up to 130 bytes), but long prefixes cost a little more per attempt. |
 
 ## Member C (simulator)
 
-Nothing yet. Stage 6 will consume `docs/sample_results/` and `/sim/*` as specified.
+The mock in `frontend/mock-server/src/sim.ts` implements everything below. Point `SIM_URL` at your service to test the real thing.
+
+| # | Request | Why / what the UI does meanwhile |
+|---|---------|----------------------------------|
+| C1 | `GET /sim/runs`: recent runs, newest first, each with `run_id, scenario_id, scenario_name, status, progress, params (resolved), repeats, seed, target, created_at, finished_at`. | Not in the contract. The panel's "Recent runs" list and the FCFS vs Fair Drop pickers need it; without it they'd have to remember run ids in the browser. |
+| C2 | Run stream (`/sim/runs/{id}/stream`) events: `status` (same JSON as `GET /sim/runs/{id}`), `progress` `{status, progress, phase_text}`, `snapshot` `{t_s, requests, throughput_rps, p95_ms, bot_seat_share}`; integer `id:` lines, and `Last-Event-ID` resume. | Assumed. Unknown event names are ignored; the client falls back to polling `GET /sim/runs/{id}` after 3 stream failures. |
+| C3 | Which result fields are `Stat` and which are plain numbers? The UI accepts either for `system.*`, `detection.*` and `attacker_cost_per_seat.*`. A plain number is labelled "single value, no CI reported". `null` means not applicable (e.g. detection with no defences). | The fairness block is required to be all `Stat` (the brief says never a bare mean). |
+| C4 | `POST /sim/runs` with `target: "real"` while the real stack isn't reachable: please answer `409 { code, message }` with a sentence we can show as-is. | The mock does this. |
+| C5 | Chart datasets: `x` may be numbers or strings; numeric x spanning ≥ 100× is drawn on a log axis. If you want to force a scale, add `x_scale: "log" | "linear"` and we'll honour it. | |
+| C6 | `scale` in `/sim/scenarios` is free-form; the UI shows it when it's a string. | |
+| C7 | `docs/sample_results/` with a few real result files when you have them. | The UI is tested against the mock's results, which follow the documented schema exactly. |

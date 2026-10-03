@@ -40,14 +40,15 @@ function minutes(seconds: number): string {
 
 function Fact({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 shrink-0 text-ink-3" aria-hidden="true">
-        {icon}
-      </span>
-      <div>
-        <dt className="text-sm text-ink-3">{label}</dt>
-        <dd className="tnum font-display text-base font-bold">{children}</dd>
-      </div>
+    // A <dl> may only contain dt/dd (optionally wrapped in one div), so the icon lives inside the dt.
+    <div>
+      <dt className="flex items-center gap-2 text-sm text-ink-3">
+        <span className="shrink-0" aria-hidden="true">
+          {icon}
+        </span>
+        {label}
+      </dt>
+      <dd className="tnum pl-7 font-display text-base font-bold">{children}</dd>
     </div>
   );
 }
