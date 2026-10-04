@@ -1,0 +1,18 @@
+id: E8
+title: Timing equivalence (uniform vs spike arrivals)
+description: >
+  Under the lottery, arrival timing must not affect win rate. 'runs' kind: two cells with
+  different arrival models; the key output is arrival_time_correlation (expected ~0 with a
+  non-significant permutation p) in each stored Results. Full-scale on the real target.
+chart_id: human_win_prob_under_attack
+y_label: Human win probability
+kind: runs
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans, no attack, mock"
+series:
+  - name: spike arrivals
+    overrides: {attackers: [], legit.arrival.kind: spike_tail}
+  - name: uniform arrivals
+    overrides: {attackers: [], legit.arrival.kind: uniform}
+metric: fairness.human_win_prob

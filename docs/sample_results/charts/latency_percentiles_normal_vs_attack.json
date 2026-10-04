@@ -1,0 +1,121 @@
+{
+  "chart_id": "latency_percentiles_normal_vs_attack",
+  "title": "Latency, normal vs attack load",
+  "x_label": "Percentile",
+  "y_label": "Latency (ms, open-loop, from intended send time)",
+  "x_scale": "category",
+  "y_scale": "linear",
+  "series": [
+    {
+      "name": "enter, normal",
+      "points": [
+        {
+          "x": "p50",
+          "y": 12.10547659974626,
+          "ci_low": 11.760167093649386,
+          "ci_high": 12.44538421089143,
+          "n": 10
+        },
+        {
+          "x": "p95",
+          "y": 64.98785346156195,
+          "ci_low": 62.97593341696576,
+          "ci_high": 67.26267225900072,
+          "n": 10
+        },
+        {
+          "x": "p99",
+          "y": 141.69628738855357,
+          "ci_low": 134.09037923620275,
+          "ci_high": 149.19419901965526,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "enter, under attack",
+      "points": [
+        {
+          "x": "p50",
+          "y": 18.79508651260639,
+          "ci_low": 17.91866285109596,
+          "ci_high": 19.666139437218852,
+          "n": 10
+        },
+        {
+          "x": "p95",
+          "y": 119.23998212247602,
+          "ci_low": 116.1336908499087,
+          "ci_high": 122.40256267917934,
+          "n": 10
+        },
+        {
+          "x": "p99",
+          "y": 341.9950394698061,
+          "ci_low": 325.2935247146397,
+          "ci_high": 360.571822619242,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "status, normal",
+      "points": [
+        {
+          "x": "p50",
+          "y": 5.646799483214666,
+          "ci_low": 5.460035723763027,
+          "ci_high": 5.829603817746294,
+          "n": 10
+        },
+        {
+          "x": "p95",
+          "y": 29.079143535613287,
+          "ci_low": 27.980481790189582,
+          "ci_high": 30.146684282231487,
+          "n": 10
+        },
+        {
+          "x": "p99",
+          "y": 67.83852287988057,
+          "ci_low": 66.00972880593874,
+          "ci_high": 69.43464810534711,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "status, under attack",
+      "points": [
+        {
+          "x": "p50",
+          "y": 8.504670290526828,
+          "ci_low": 8.256584649148074,
+          "ci_high": 8.784404372377328,
+          "n": 10
+        },
+        {
+          "x": "p95",
+          "y": 52.71046563889005,
+          "ci_low": 50.206097378220434,
+          "ci_high": 54.94487667856352,
+          "n": 10
+        },
+        {
+          "x": "p99",
+          "y": 153.9214584030633,
+          "ci_low": 147.89739295109462,
+          "ci_high": 159.1718777226578,
+          "n": 10
+        }
+      ]
+    }
+  ],
+  "notes": "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite. 50k humans; attack = all 9 profiles at default knobs.",
+  "target": "mock",
+  "synthetic": true,
+  "experiment_id": "E3",
+  "run_ids": [
+    "synthetic-E3"
+  ]
+}

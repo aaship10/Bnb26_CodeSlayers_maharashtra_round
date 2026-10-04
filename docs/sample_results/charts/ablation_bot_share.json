@@ -1,0 +1,126 @@
+{
+  "chart_id": "ablation_bot_share",
+  "title": "Ablation: bot seat share by defence configuration",
+  "x_label": "Defence configuration",
+  "y_label": "Bot seat share",
+  "x_scale": "category",
+  "y_scale": "linear",
+  "series": [
+    {
+      "name": "Bot seat share",
+      "points": [
+        {
+          "x": "none",
+          "y": 0.036000000000000004,
+          "ci_low": 0.032795000000000005,
+          "ci_high": 0.03919999999999999,
+          "n": 10
+        },
+        {
+          "x": "rate_limit",
+          "y": 0.039599999999999996,
+          "ci_low": 0.03500000000000001,
+          "ci_high": 0.044,
+          "n": 10
+        },
+        {
+          "x": "pow",
+          "y": 0.035399999999999994,
+          "ci_low": 0.030395000000000002,
+          "ci_high": 0.04019999999999999,
+          "n": 10
+        },
+        {
+          "x": "captcha",
+          "y": 0.027000000000000003,
+          "ci_low": 0.022000000000000002,
+          "ci_high": 0.0316,
+          "n": 10
+        },
+        {
+          "x": "signals",
+          "y": 0.028599999999999997,
+          "ci_low": 0.024199999999999996,
+          "ci_high": 0.033,
+          "n": 10
+        },
+        {
+          "x": "risk",
+          "y": 0.018000000000000002,
+          "ci_low": 0.0154,
+          "ci_high": 0.0208,
+          "n": 10
+        },
+        {
+          "x": "rate_limit+pow",
+          "y": 0.030199999999999998,
+          "ci_low": 0.026600000000000002,
+          "ci_high": 0.033600000000000005,
+          "n": 10
+        },
+        {
+          "x": "rate_limit+pow+captcha",
+          "y": 0.028600000000000004,
+          "ci_low": 0.0252,
+          "ci_high": 0.032,
+          "n": 10
+        },
+        {
+          "x": "all",
+          "y": 0.0108,
+          "ci_low": 0.008200000000000002,
+          "ci_high": 0.0134,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "Lottery-neutral baseline",
+      "points": [
+        {
+          "x": "none",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "rate_limit",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "pow",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "captcha",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "signals",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "risk",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "rate_limit+pow",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "rate_limit+pow+captcha",
+          "y": 0.038461538461538464
+        },
+        {
+          "x": "all",
+          "y": 0.038461538461538464
+        }
+      ]
+    }
+  ],
+  "notes": "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite. Mixed attack, all 9 profiles, 2,000 bot identities in total.",
+  "target": "mock",
+  "synthetic": true,
+  "experiment_id": "E5",
+  "run_ids": [
+    "synthetic-E5"
+  ]
+}

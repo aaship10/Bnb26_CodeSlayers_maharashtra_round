@@ -1,0 +1,101 @@
+[
+  {
+    "id": "synthetic-E1",
+    "title": "Request-multiplier sweep",
+    "description": "Does sending more requests buy more seats? FCFS vs Fair Drop. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "bot_share_vs_request_multiplier"
+    ],
+    "run_ids": [
+      "synthetic-E1"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-E2",
+    "title": "Sybil sweep",
+    "description": "Bot seat share as identity count grows, per defence preset. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "bot_share_vs_identities"
+    ],
+    "run_ids": [
+      "synthetic-E2"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-E3",
+    "title": "Latency under attack",
+    "description": "p50/p95/p99 per endpoint, normal vs attack load. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "latency_percentiles_normal_vs_attack"
+    ],
+    "run_ids": [
+      "synthetic-E3"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-E4",
+    "title": "Detection per layer",
+    "description": "Precision, recall and false positives of each defence layer. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "detection_precision_recall_by_layer"
+    ],
+    "run_ids": [
+      "synthetic-E4"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-E5",
+    "title": "Ablation",
+    "description": "Each defence layer alone and cumulative, all attack profiles. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "ablation_bot_share"
+    ],
+    "run_ids": [
+      "synthetic-E5"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-E6",
+    "title": "Human win probability",
+    "description": "How gracefully humans' chances degrade under attack. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [
+      "human_win_prob_under_attack"
+    ],
+    "run_ids": [
+      "synthetic-E6"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  },
+  {
+    "id": "synthetic-demos",
+    "title": "Demo presets",
+    "description": "The three demo presets as single result files. SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "charts": [],
+    "run_ids": [
+      "synthetic-demo-fcfs-flood",
+      "synthetic-demo-lottery-flood",
+      "synthetic-demo-sybil200-off",
+      "synthetic-demo-sybil200-on"
+    ],
+    "target": "mock",
+    "synthetic": true,
+    "created_at": "2026-10-03T00:00:00Z"
+  }
+]

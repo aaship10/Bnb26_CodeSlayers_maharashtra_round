@@ -1,0 +1,24 @@
+id: E4
+title: Detection quality per defence layer
+description: >
+  Precision, recall and false-positive rate of the risk/signals layers vs ground truth, per
+  defence configuration. A layer that only prices an identity (PoW, CAPTCHA) shows no detection
+  here; its effect appears as lockout in entry success (see E5/E6).
+chart_id: detection_precision_recall_by_layer
+chart_kind: multi_metric
+metrics:
+  - {name: Precision, metric: detection.precision}
+  - {name: Recall, metric: detection.recall}
+  - {name: False-positive rate, metric: detection.false_positive_rate}
+y_label: Rate
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + 300 bots, mock"
+x:
+  label: Defence configuration
+  param: event.defences.preset
+  values: [rate_limit, "rate_limit+pow", all]
+  scale: category
+series:
+  - name: Distributed botnet
+    overrides: {attackers.0.profile: distributed_botnet, attackers.0.identities: 300, attackers.0.ips: 50}

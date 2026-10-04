@@ -1,0 +1,18 @@
+id: E3
+title: Latency, normal vs attack load
+description: >
+  p50/p95/p99 of the enter endpoint, normal crowd vs under attack. Full-scale: 50k humans on
+  the real target.
+chart_id: latency_percentiles_normal_vs_attack
+chart_kind: latency
+latency_endpoint: enter
+y_label: Latency (ms, open-loop)
+kind: runs
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans (+ bots under attack), mock"
+series:
+  - name: Normal crowd
+    overrides: {attackers: []}
+  - name: Under attack
+    overrides: {attackers.0.profile: distributed_botnet, attackers.0.identities: 300, attackers.0.ips: 50}

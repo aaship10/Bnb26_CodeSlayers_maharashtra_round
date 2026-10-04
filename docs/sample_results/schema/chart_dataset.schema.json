@@ -1,0 +1,187 @@
+{
+  "$defs": {
+    "Point": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "X"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        },
+        "ci_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ci Low"
+        },
+        "ci_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ci High"
+        },
+        "n": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "Series": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/Point"
+          },
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "points"
+      ],
+      "title": "Series",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "chart_id": {
+      "title": "Chart Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "x_label": {
+      "title": "X Label",
+      "type": "string"
+    },
+    "y_label": {
+      "title": "Y Label",
+      "type": "string"
+    },
+    "x_scale": {
+      "default": "linear",
+      "enum": [
+        "linear",
+        "log",
+        "category"
+      ],
+      "title": "X Scale",
+      "type": "string"
+    },
+    "y_scale": {
+      "default": "linear",
+      "enum": [
+        "linear",
+        "log"
+      ],
+      "title": "Y Scale",
+      "type": "string"
+    },
+    "series": {
+      "items": {
+        "$ref": "#/$defs/Series"
+      },
+      "title": "Series",
+      "type": "array"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "target": {
+      "enum": [
+        "real",
+        "mock"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "experiment_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiment Id"
+    },
+    "run_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Run Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "chart_id",
+    "title",
+    "x_label",
+    "y_label",
+    "series",
+    "target",
+    "synthetic"
+  ],
+  "title": "ChartDataset",
+  "type": "object"
+}

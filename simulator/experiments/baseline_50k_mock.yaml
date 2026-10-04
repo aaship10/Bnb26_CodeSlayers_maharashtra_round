@@ -1,0 +1,26 @@
+# Stage 2 / E6 rehearsal: 50,000 LOGICAL legit users (scheduled async clients over a
+# bounded connection pool from one machine, NOT 50k simultaneous sockets), no attack,
+# MOCK target. Measures the load engine and the mock, not the real system.
+name: baseline_50k_mock
+description: 50k logical users flash crowd against the mock, no attack, lottery, no defences.
+target: mock
+seed: 20261004
+repeats: 10
+event:
+  inventory: 500
+  window_seconds: 60
+  claim_ttl_seconds: 30
+  mode: LOTTERY
+  defences: {preset: none}
+legit:
+  count: 50000
+  arrival: {kind: spike_tail, spike_fraction: 0.6, spike_window_fraction: 0.05}
+  nat_groups: {fraction: 0.1, group_size: 50}
+  retry: {retry_fraction: 0.3, min_retries: 1, max_retries: 3, jitter_ms_mean: 1500}
+  poll: {interval_s_mean: 10, max_polls: 12, waitlist_attention: 2.0}
+load:
+  max_in_flight: 1024
+  procs: 8
+  request_timeout_s: 15
+  lead_s: 8
+auth_mode: dev_header

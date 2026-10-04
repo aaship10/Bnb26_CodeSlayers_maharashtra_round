@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+results/*
+!results/.gitkeep
+
+# dev stack state (tools/dev_real_stack.py)
+.dev_real/
+.venv_a/

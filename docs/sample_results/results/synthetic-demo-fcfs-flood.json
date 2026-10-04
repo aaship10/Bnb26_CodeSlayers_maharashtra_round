@@ -1,0 +1,542 @@
+{
+  "schema_version": 1,
+  "run_id": "synthetic-demo-fcfs-flood",
+  "scenario_id": "demo-fcfs-flood",
+  "target": "mock",
+  "synthetic": true,
+  "seed": 7,
+  "repeats": 30,
+  "failed_runs": 0,
+  "created_at": "2026-10-03T00:00:00Z",
+  "population": {
+    "legit": 2000,
+    "bots": 1,
+    "bot_identities": 20
+  },
+  "event": {
+    "inventory": 100,
+    "mode": "FCFS",
+    "defences": {
+      "preset": "none"
+    }
+  },
+  "metrics": {
+    "fairness": {
+      "bot_seat_share": {
+        "mean": 0.20000000000000007,
+        "ci_low": 0.20000000000000007,
+        "ci_high": 0.20000000000000007,
+        "n": 30
+      },
+      "bot_entrant_share": {
+        "mean": 0.00992162659909619,
+        "ci_low": 0.009918511688641668,
+        "ci_high": 0.009924745580196572,
+        "n": 30
+      },
+      "human_win_prob": {
+        "mean": 0.04000000000000001,
+        "ci_low": 0.04000000000000001,
+        "ci_high": 0.04000000000000001,
+        "n": 30
+      },
+      "human_entry_success_rate": {
+        "mean": 0.9979,
+        "ci_low": 0.9975995833333333,
+        "ci_high": 0.9982166666666666,
+        "n": 30
+      },
+      "arrival_time_correlation": {
+        "mean": -0.4072827263690318,
+        "ci_low": -0.4176188918484961,
+        "ci_high": -0.39768671900303587,
+        "n": 30
+      },
+      "arrival_time_perm_p": 0.0001,
+      "jain_index": {
+        "mean": 0.049,
+        "ci_low": 0.047,
+        "ci_high": 0.051,
+        "n": 2000
+      },
+      "gini": {
+        "mean": 0.95,
+        "ci_low": 0.94,
+        "ci_high": 0.96,
+        "n": 2000
+      },
+      "attacker_cost_per_seat": {
+        "requests": {
+          "mean": 2516.3799837049723,
+          "ci_low": 2489.387730349324,
+          "ci_high": 2541.696188850254,
+          "n": 30
+        },
+        "accounts": {
+          "mean": 1.0,
+          "ci_low": 1.0,
+          "ci_high": 1.0,
+          "n": 30
+        },
+        "pow_hashes": null,
+        "captcha_solves": null,
+        "usd_modelled": null
+      }
+    },
+    "system": {
+      "latency_ms": {
+        "enter": {
+          "p50": 18.0,
+          "p95": 86.0,
+          "p99": 212.0,
+          "n": 78000
+        },
+        "status": {
+          "p50": 6.0,
+          "p95": 31.0,
+          "p99": 77.0,
+          "n": 273000
+        },
+        "claim": {
+          "p50": 11.0,
+          "p95": 40.0,
+          "p99": 95.0,
+          "n": 3000
+        },
+        "enter.legit": {
+          "p50": 15.0,
+          "p95": 80.0,
+          "p99": 190.0,
+          "n": 75000
+        },
+        "enter.bot": {
+          "p50": 21.0,
+          "p95": 95.0,
+          "p99": 240.0,
+          "n": 3000
+        }
+      },
+      "throughput_rps": {
+        "mean": 1456.907024504249,
+        "ci_low": 1442.9174704789118,
+        "ci_high": 1469.9766196317744,
+        "n": 30
+      },
+      "error_rates": {
+        "http_429_legit": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_429_bot": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_5xx": {
+          "mean": 0.0004025894374657498,
+          "ci_low": 0.0003316927019147419,
+          "ci_high": 0.0004704018489843764,
+          "n": 30
+        },
+        "timeout": {
+          "mean": 0.0010373092090187768,
+          "ci_low": 0.0008754667738910857,
+          "ci_high": 0.0012080966443133933,
+          "n": 30
+        }
+      },
+      "availability": {
+        "mean": 0.9985601013535155,
+        "ci_low": 0.998364132720154,
+        "ci_high": 0.9987334310303855,
+        "n": 30
+      },
+      "scheduler_lag_ms": null
+    },
+    "detection": {
+      "precision": null,
+      "recall": null,
+      "false_positive_rate": null,
+      "false_positive_rate_nat": null
+    },
+    "integrity": {
+      "oversold": 0,
+      "duplicate_users": 0,
+      "duplicate_seats": 0,
+      "orphaned_holds": 0,
+      "draw_verified": null,
+      "passed": true
+    }
+  },
+  "per_run": [
+    {
+      "index": 0,
+      "seed": 403635829478089562,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 1,
+      "seed": 2864477682357658067,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 2,
+      "seed": 5444718509458301495,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 3,
+      "seed": 8589327105390845657,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 4,
+      "seed": 224984008244484693,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 5,
+      "seed": 8904091677812961568,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 6,
+      "seed": 2899418322659704962,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 7,
+      "seed": 3022568507209021444,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 8,
+      "seed": 5002228549407717270,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 9,
+      "seed": 6857207542672723948,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 10,
+      "seed": 6331965376988176452,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 11,
+      "seed": 5934425596019572416,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 12,
+      "seed": 2559683038634620345,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 13,
+      "seed": 1014958565923332067,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 14,
+      "seed": 6735378614037040886,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 15,
+      "seed": 5303196407284125827,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 16,
+      "seed": 2238036968080012498,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 17,
+      "seed": 3667830698045862300,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 18,
+      "seed": 4387029087555501722,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 19,
+      "seed": 4719074792968830120,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 20,
+      "seed": 6626289265232240370,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 21,
+      "seed": 1792997545628246132,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 22,
+      "seed": 3430487397941929398,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 23,
+      "seed": 8558195664309029814,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 24,
+      "seed": 4812403466208050058,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 25,
+      "seed": 2640458835491190217,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 26,
+      "seed": 6746491192860916045,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 27,
+      "seed": 86535158461278178,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 28,
+      "seed": 323192744160424818,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 29,
+      "seed": 6535527162225018727,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.2,
+        "human_win_prob": 0.04,
+        "bot_seats": 20,
+        "integrity_passed": true
+      }
+    }
+  ],
+  "notes": [
+    "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "FCFS under a 20-identity speed-bot flood",
+    "attack profile: speed_bot"
+  ],
+  "scenario": null
+}
