@@ -6,7 +6,7 @@ import { api, describeError } from '@/api';
 import { queryKeys } from '@/api/queryClient';
 import type { EventInfo, Phase } from '@/api/schemas';
 import { useAnnounce } from '@/app/Announcer';
-import { withJitter } from '@/lib/backoff';
+import { pollInterval } from '@/api/polling';
 import { formatCount, formatWindow } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useSession } from '@/state/session';
@@ -18,6 +18,8 @@ import { Ticket } from '@/ui/Ticket';
 import { Countdown } from './Countdown';
 import { EnterCard } from './EnterCard';
 import { useDeadlineRefetch } from './useDeadlineRefetch';
+
+const drawingPoll = pollInterval(6000, 4000);
 
 const PHASE_ANNOUNCEMENT: Partial<Record<Phase, string>> = {
   OPEN: 'Entries are now open.',
@@ -38,14 +40,15 @@ function minutes(seconds: number): string {
 
 function Fact({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 shrink-0 text-ink-3" aria-hidden="true">
-        {icon}
-      </span>
-      <div>
-        <dt className="text-sm text-ink-3">{label}</dt>
-        <dd className="tnum font-display text-base font-bold">{children}</dd>
-      </div>
+    // A <dl> may only contain dt/dd (optionally wrapped in one div), so the icon lives inside the dt.
+    <div>
+      <dt className="flex items-center gap-2 text-sm text-ink-3">
+        <span className="shrink-0" aria-hidden="true">
+          {icon}
+        </span>
+        {label}
+      </dt>
+      <dd className="tnum pl-7 font-display text-base font-bold">{children}</dd>
     </div>
   );
 }
@@ -85,7 +88,7 @@ export function EventPage() {
     queryFn: ({ signal }) => api.events.get(id, signal),
     enabled: id.length > 0,
     // While the draw is running, check back every 6 to 10 s (jittered). Paused when the tab is hidden.
-    refetchInterval: (q) => (q.state.data?.phase === 'DRAWING' ? withJitter(6000, 4000) : false),
+    refetchInterval: (q) => (q.state.data?.phase === 'DRAWING' ? drawingPoll(q) : false),
   });
   const event = eventQuery.data;
 

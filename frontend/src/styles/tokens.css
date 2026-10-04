@@ -39,6 +39,21 @@
 
   --color-white: #ffffff;
 
+  /* data-viz only: second categorical slot beside cobalt. Validated with the
+     dataviz palette checker (lightness, chroma, CVD all pass on paper-2; contrast
+     is a WARN, so every chart using it also shows the numbers as text). */
+  --color-amber: #c98a00;
+
+  /* Categorical chart palette, fixed order, never cycled. Validated on paper-2
+     with the dataviz checker: lightness, chroma, CVD (worst adjacent dE 9.2) and
+     normal-vision floor all pass; slots 3-5 are a contrast WARN, so every chart
+     also has a legend, tooltips and a table view. */
+  --color-viz-1: #2441d6;
+  --color-viz-2: #eb6834;
+  --color-viz-3: #1baf7a;
+  --color-viz-4: #c98a00;
+  --color-viz-5: #e87ba4;
+
   /* type */
   --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
@@ -80,10 +95,19 @@
   --animate-bob: bob 5s ease-in-out infinite;
   --animate-spin-slow: spin 0.9s linear infinite;
   --animate-stamp: stamp 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-tumble: tumble 2.4s linear infinite;
+  --animate-confetti: confetti 2.6s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
 
   @keyframes bob {
     0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
     50% { transform: translateY(-7px) rotate(calc(var(--tilt, 0deg) + 3deg)); }
+  }
+  @keyframes tumble {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes confetti {
+    0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate3d(var(--dx, 0), 105vh, 0) rotate(var(--spin, 540deg)); opacity: 0.9; }
   }
   @keyframes stamp {
     0% { transform: scale(1.5) rotate(-8deg); opacity: 0; }

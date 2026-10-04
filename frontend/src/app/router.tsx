@@ -2,15 +2,20 @@ import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { Layout } from './Layout';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { ComingSoon } from '@/pages/ComingSoon';
-import { RegisterPage } from '@/features/auth/RegisterPage';
-import { EventPage } from '@/features/event/EventPage';
 
 /**
- * Route table. Attendee screens are in the main bundle; organizer, fairness,
- * simulator and dev routes are code-split so the attendee path stays light.
- * Stubs (ComingSoon) are swapped for real screens stage by stage.
+ * Route table. Only the home page is in the initial bundle; every other screen
+ * loads on demand. The attendee screens are prefetched while the browser is
+ * idle (see prefetchAttendeeRoutes), so moving between them stays instant.
  */
+const attendee = {
+  register: () => import('@/features/auth/RegisterPage'),
+  event: () => import('@/features/event/EventPage'),
+  status: () => import('@/features/status/StatusPage'),
+  claim: () => import('@/features/claim/ClaimPage'),
+  ticket: () => import('@/features/ticket/TicketPage'),
+};
+
 const routes: RouteObject[] = [
   {
     element: <Layout />,
@@ -18,24 +23,23 @@ const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
 
       // attendee
-      { path: 'register', element: <RegisterPage /> },
-      { path: 'events/:id', element: <EventPage /> },
-      // stage 3
-      { path: 'events/:id/status', element: <ComingSoon title="Your status" stage={3}>Live updates over SSE, with a polite polling fallback.</ComingSoon> },
-      { path: 'events/:id/claim', element: <ComingSoon title="Claim your seat" stage={3}>Hold timer and a safe, repeatable claim.</ComingSoon> },
-      { path: 'events/:id/ticket', element: <ComingSoon title="Your ticket" stage={3}>Seat number and ticket code.</ComingSoon> },
+      { path: 'register', lazy: async () => ({ Component: (await attendee.register()).RegisterPage }) },
+      { path: 'events/:id', lazy: async () => ({ Component: (await attendee.event()).EventPage }) },
+      { path: 'events/:id/status', lazy: async () => ({ Component: (await attendee.status()).StatusPage }) },
+      { path: 'events/:id/claim', lazy: async () => ({ Component: (await attendee.claim()).ClaimPage }) },
+      { path: 'events/:id/ticket', lazy: async () => ({ Component: (await attendee.ticket()).TicketPage }) },
 
-      // public fairness (stage 5)
-      { path: 'events/:id/fairness', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).FairnessPage }) },
-      { path: 'events/:id/audit', lazy: async () => ({ Component: (await import('@/features/fairness/pages')).AuditPage }) },
+      // public fairness
+      { path: 'events/:id/fairness', lazy: () => import('@/features/fairness/FairnessPage') },
+      { path: 'events/:id/audit', lazy: () => import('@/features/fairness/AuditPage') },
 
-      // organizer (stage 4) and simulator / results (stage 6): not linked from the attendee nav
-      { path: 'admin', lazy: async () => ({ Component: (await import('@/features/admin/pages')).AdminHome }) },
-      { path: 'admin/events/:id', lazy: async () => ({ Component: (await import('@/features/admin/pages')).AdminEvent }) },
-      { path: 'admin/sim', lazy: async () => ({ Component: (await import('@/features/sim/pages')).SimPanel }) },
-      { path: 'admin/sim/runs/:id', lazy: async () => ({ Component: (await import('@/features/sim/pages')).RunResults }) },
-      { path: 'admin/sim/compare', lazy: async () => ({ Component: (await import('@/features/sim/pages')).Compare }) },
-      { path: 'admin/sim/experiments', lazy: async () => ({ Component: (await import('@/features/sim/pages')).Experiments }) },
+      // organizer and simulator: not linked from the attendee nav
+      { path: 'admin', lazy: () => import('@/features/admin/AdminHome') },
+      { path: 'admin/events/:id', lazy: () => import('@/features/admin/AdminEventPage') },
+      { path: 'admin/sim', lazy: () => import('@/features/sim/SimPanel') },
+      { path: 'admin/sim/runs/:id', lazy: () => import('@/features/sim/RunPage') },
+      { path: 'admin/sim/compare', lazy: () => import('@/features/sim/ComparePage') },
+      { path: 'admin/sim/experiments', lazy: () => import('@/features/sim/ExperimentsPage') },
 
       ...(import.meta.env.DEV
         ? ([
@@ -50,3 +54,19 @@ const routes: RouteObject[] = [
 ];
 
 export const router = createBrowserRouter(routes);
+
+/**
+ * Warm the attendee chunks once the page is idle, so tapping "View drop" or
+ * "Enter" never waits on a download. Low priority, and skipped when the
+ * connection asks to save data.
+ */
+export function prefetchAttendeeRoutes(): void {
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (conn?.saveData) return;
+  const run = () => {
+    for (const load of Object.values(attendee)) void load().catch(() => undefined);
+  };
+  const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+  if (ric) ric(run, { timeout: 4000 });
+  else setTimeout(run, 2000);
+}

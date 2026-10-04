@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { MockClock } from './clock';
 import {
   EVENTS,
@@ -12,6 +13,7 @@ import {
   type Phase,
 } from './events';
 import { SCENARIOS } from './scenarios';
+import { defaultDefences, type DefenceConfig } from './defences';
 
 export const FAULT_TARGETS = ['enter', 'claim', 'status'] as const;
 export const FAULT_KINDS = [
@@ -93,7 +95,24 @@ export class World {
   autoClaim = false;
   /** What the (fixed) draw decided for the signed-in person. */
   outcome: 'won' | 'waitlisted' = 'won';
-  phaseOverride: Phase | null = null;
+  /** When false the stream endpoint answers 503, forcing clients onto the polling fallback. */
+  sseEnabled = true;
+
+  /** All events: the fixed demo ones plus any created through the admin API. */
+  events: EventDef[] = [];
+  /**
+   * Admin-driven lifecycle. Once an organizer acts on an event (or a scenario pins a
+   * phase) its phase comes from here instead of from the clock and its timeline.
+   */
+  manual = new Map<string, { phase: Phase; drawnAt?: number }>();
+  configs = new Map<string, DefenceConfig>();
+  /** Admin writes replayed by Idempotency-Key. */
+  adminIdempotency = new Map<string, { status: number; body: unknown }>();
+  /** Demo switch: make the invariants endpoint report a violation (to show the red banner). */
+  breakInvariants = false;
+  /** Fairness tamper mode for demos (see fairness.ts). */
+  tamper: 'none' | 'entrants' | 'results' | 'seed' | 'audit' = 'none';
+  createdCounter = 0;
 
   constructor() {
     this.reset('fresh');
@@ -112,7 +131,14 @@ export class World {
     this.autoEnter = false;
     this.autoClaim = false;
     this.outcome = 'won';
-    this.phaseOverride = null;
+    this.sseEnabled = true;
+    this.events = EVENTS.map((e) => ({ ...e }));
+    this.manual = new Map();
+    this.configs = new Map(this.events.map((e) => [e.id, defaultDefences(e.id)]));
+    this.adminIdempotency = new Map();
+    this.breakInvariants = false;
+    this.tamper = 'none';
+    this.createdCounter = 0;
     this.clock.setSpeed(1);
     this.clock.setIso(INITIAL_CLOCK);
     scenario.apply(this);
@@ -136,9 +162,27 @@ export class World {
     this.setFaults([...this.faults.keys(), key]);
   }
 
+  findEvent(id: string): EventDef | undefined {
+    return this.events.find((e) => e.id === id);
+  }
+
+  setManualPhase(eventId: string, phase: Phase, drawnAt?: number): void {
+    const prev = this.manual.get(eventId);
+    this.manual.set(eventId, { phase, drawnAt: drawnAt ?? prev?.drawnAt });
+  }
+
+  /** When holds expire: TTL after the draw (admin-run draw, or the event's timeline). */
+  holdEndsFor(ev: EventDef): number {
+    const drawnAt = this.manual.get(ev.id)?.drawnAt;
+    return drawnAt !== undefined ? drawnAt + ev.claim_ttl_s * 1000 : timeline(ev).holdEnds;
+  }
+
   phaseOf(ev: EventDef): Phase {
-    if (ev.id === PRIMARY_EVENT_ID && this.phaseOverride) return this.phaseOverride;
-    return derivePhase(ev, this.clock.now());
+    const m = this.manual.get(ev.id);
+    if (!m) return derivePhase(ev, this.clock.now());
+    // An admin-run claiming phase still ends by itself when the holds run out.
+    if (m.phase === 'CLAIMING' && this.clock.now() >= this.holdEndsFor(ev)) return 'CLOSED';
+    return m.phase;
   }
 
   entryFor(userId: string, ev: EventDef): Entry | undefined {
@@ -169,8 +213,8 @@ export class World {
 
     const publicId = this.publicId(user.id, ev);
     if (this.outcome === 'won') {
-      if (phase === 'CLAIMING') {
-        return { ...base, state: 'WON', hold_expires_at: new Date(timeline(ev).holdEnds).toISOString(), public_id: publicId };
+      if (phase === 'CLAIMING' && this.clock.now() < this.holdEndsFor(ev)) {
+        return { ...base, state: 'WON', hold_expires_at: new Date(this.holdEndsFor(ev)).toISOString(), public_id: publicId };
       }
       return { ...base, state: 'EXPIRED', public_id: publicId };
     }
@@ -188,6 +232,10 @@ export class World {
     return `p_${hashHex('public', userId, ev.id).slice(0, 12)}`;
   }
 
+  adminEventView(ev: EventDef) {
+    return { ...this.eventView(ev), config: { defences: this.configs.get(ev.id) ?? defaultDefences(ev.id) } };
+  }
+
   eventView(ev: EventDef) {
     return {
       id: ev.id,
@@ -199,10 +247,9 @@ export class World {
       window_opens_at: ev.opens_at,
       window_closes_at: ev.closes_at,
       claim_ttl_s: ev.claim_ttl_s,
-      seed_commitment: hashHex('commit', ev.id),
+      seed_commitment: createHash('sha256').update(createHash('sha256').update(`fd-mock-server-seed:${ev.id}`).digest()).digest('hex'),
       server_now: this.clock.iso(),
     };
   }
 }
 
-export { EVENTS };

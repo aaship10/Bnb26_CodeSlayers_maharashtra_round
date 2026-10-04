@@ -6,7 +6,7 @@ import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/jetbrains-mono';
 import './styles/index.css';
-import { router } from './app/router';
+import { prefetchAttendeeRoutes, router } from './app/router';
 import { AnnouncerProvider } from './app/Announcer';
 import { createQueryClient } from './api/queryClient';
 
@@ -30,3 +30,5 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+prefetchAttendeeRoutes();
