@@ -52,6 +52,11 @@ class BaselineSpec(_Strict):
     metric: str  # a Results metric path; drawn as a flat reference per x
 
 
+class MetricSeries(_Strict):
+    name: str
+    metric: str  # a Results metric path, e.g. detection.precision
+
+
 class ExperimentSpec(_Strict):
     id: str
     title: str
@@ -67,6 +72,12 @@ class ExperimentSpec(_Strict):
     series: list[SeriesSpec] = Field(default_factory=list)
     metric: str = "fairness.bot_seat_share"
     baseline: BaselineSpec | None = None
+    # metric: one metric over the x sweep (default). multi_metric: several metrics (`metrics`)
+    # over the same cells, one chart series each. latency: pooled p50/p95/p99 of `latency_endpoint`
+    # per cell (needs kind "runs"; each cell becomes a series).
+    chart_kind: Literal["metric", "latency", "multi_metric"] = "metric"
+    metrics: list[MetricSeries] = Field(default_factory=list)
+    latency_endpoint: str = "enter"
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "ExperimentSpec":
@@ -97,6 +108,7 @@ class ExperimentOutput:
     chart: ChartDataset | None = None
     integrity_passed: bool = True
     out_dir: Path | None = None
+    skipped: list[str] = field(default_factory=list)  # cells whose metric was undefined (no chart point)
 
 
 class MockNotAllowed(RuntimeError):
@@ -108,13 +120,32 @@ def _cell_name(exp_id: str, series: str, x: Any) -> str:
     return f"{exp_id}__{safe}"[:60]
 
 
-def _metric_point(results: Results, metric_path: str, x: Any) -> Point:
+def _metric_point(results: Results, metric_path: str, x: Any) -> Point | None:
+    """The chart point for one cell, or None when the metric is undefined for it (null in
+    Results, e.g. bot_seat_share when a defence locked everyone out). Anything else that is
+    not a number/Stat is a spec error and raises."""
     val = get_by_path(results.model_dump(mode="json")["metrics"], metric_path)
+    if val is None:
+        return None
     if isinstance(val, dict) and "mean" in val:  # a Stat
         return Point(x=x, y=val["mean"], ci_low=val.get("ci_low"), ci_high=val.get("ci_high"), n=val.get("n"))
-    if isinstance(val, (int, float)):
+    if isinstance(val, (int, float)) and not isinstance(val, bool):
         return Point(x=x, y=float(val))
     raise ValueError(f"metric {metric_path!r} is not a number/Stat: {val!r}")
+
+
+def expand_cells(spec: ExperimentSpec) -> list[tuple[str, Any, dict]]:
+    """(series_name, x, overrides) for every cell the runner will execute."""
+    cells: list[tuple[str, Any, dict]] = []
+    if spec.kind == "sweep":
+        assert spec.x is not None, "sweep needs an x axis"
+        for sseries in spec.series:
+            for xv in spec.x.values:
+                cells.append((sseries.name, xv, {**sseries.overrides, spec.x.param: xv}))
+    else:  # "runs": each series is a single cell (no x sweep)
+        for sseries in spec.series:
+            cells.append((sseries.name, sseries.name, dict(sseries.overrides)))
+    return cells
 
 
 async def run_experiment(spec: ExperimentSpec, target: TargetConfig, out_root: Path,
@@ -129,16 +160,7 @@ async def run_experiment(spec: ExperimentSpec, target: TargetConfig, out_root: P
     out_dir.mkdir(parents=True, exist_ok=True)
     out = ExperimentOutput(spec=spec, out_dir=out_dir)
 
-    cells: list[tuple[str, Any, dict]] = []
-    if spec.kind == "sweep":
-        assert spec.x is not None, "sweep needs an x axis"
-        for sseries in spec.series:
-            for xv in spec.x.values:
-                ov = {**sseries.overrides, spec.x.param: xv}
-                cells.append((sseries.name, xv, ov))
-    else:  # "runs": each series is a single cell (no x sweep)
-        for sseries in spec.series:
-            cells.append((sseries.name, sseries.name, sseries.overrides))
+    cells = expand_cells(spec)
 
     series_points: dict[str, list[Point]] = {s.name: [] for s in spec.series}
     for series_name, xv, ov in cells:
@@ -162,32 +184,111 @@ async def run_experiment(spec: ExperimentSpec, target: TargetConfig, out_root: P
         if not results.metrics.integrity.passed:
             out.integrity_passed = False
         out.cells.append(CellResult(series_name, xv, results, run_dirs))
+        if spec.chart_kind != "metric":
+            continue  # these chart kinds are assembled from all cells after the loop
         pt = _metric_point(results, spec.metric, xv)
+        if pt is None:
+            # Undefined for this cell (e.g. total lockout => 0 seats). Never dropped silently:
+            # logged here, kept in out.skipped, and written into the chart's notes.
+            out.skipped.append(f"{series_name} x={xv}: {spec.metric} undefined (see that cell's Results notes)")
+            log(f"  ! {spec.metric} is undefined for this cell; no chart point (recorded in chart notes)")
+            continue
         series_points[series_name].append(pt)
         log(f"  {spec.metric} = {pt.y:.4f}" + (f" [{pt.ci_low:.4f},{pt.ci_high:.4f}]" if pt.ci_low is not None else ""))
 
-    chart = _build_chart(spec, series_points, base_target, out.cells)
+    if spec.chart_kind == "latency":
+        chart = _latency_chart(spec, base_target, out.cells)
+    elif spec.chart_kind == "multi_metric":
+        chart = _multi_metric_chart(spec, base_target, out.cells, out.skipped)
+    else:
+        chart = _build_chart(spec, series_points, base_target, out.cells, out.skipped)
     out.chart = chart
     (out_dir / f"{spec.chart_id}.json").write_text(
         json.dumps(chart.to_json(), indent=2) + "\n", encoding="utf-8")
+    meta = {  # the index entry the /sim service lists (GET /experiments)
+        "id": spec.id, "title": spec.title, "description": spec.description, "charts": [spec.chart_id],
+        "run_ids": [c.results.run_id for c in out.cells], "target": base_target, "synthetic": False,
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "repeats": spec.repeats, "scale": spec.scale, "integrity_passed": out.integrity_passed,
+        "skipped": out.skipped,
+    }
+    (out_dir / "experiment.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     log(f"[{spec.id}] done; integrity {'PASSED' if out.integrity_passed else 'FAILED'}; chart -> {spec.chart_id}.json")
     return out
 
 
+def _latency_chart(spec: ExperimentSpec, target: str, cells: list[CellResult]) -> ChartDataset:
+    """Pooled percentiles per cell. Percentiles come from one merged HDR histogram, so there
+    is no CI to draw; n on each point is the request count behind it (stated in the notes)."""
+    if spec.kind != "runs":
+        raise ValueError("chart_kind 'latency' needs kind 'runs' (one cell per series)")
+    series = []
+    for cr in cells:
+        pct = cr.results.metrics.system.latency_ms.get(spec.latency_endpoint)
+        if pct is None or not pct.n:
+            continue
+        pts = [Point(x=q, y=float(getattr(pct, q)), n=pct.n) for q in ("p50", "p95", "p99")
+               if getattr(pct, q) is not None]
+        series.append(Series(name=cr.series, points=pts))
+    lag = [c.results.metrics.system.scheduler_lag_ms for c in cells]
+    lag_p99 = max((x.p99 for x in lag if x and x.p99 is not None), default=None)
+    notes = (spec.description + " " if spec.description else "") + (
+        f"Endpoint: {spec.latency_endpoint}. Open-loop latency from the intended send time, pooled "
+        "over all repeats (no CI: one merged histogram).")
+    if lag_p99 is not None and lag_p99 > 50:
+        notes += (f" WARNING: load-generator scheduler lag p99 reached {lag_p99} ms, so these include "
+                  "client-side queueing, not only server time.")
+    return ChartDataset(chart_id=spec.chart_id, title=spec.title, x_label="Percentile", y_label=spec.y_label,
+                        x_scale="category", series=series, notes=notes, target=target, synthetic=False,
+                        experiment_id=spec.id, run_ids=[c.results.run_id for c in cells])
+
+
+def _multi_metric_chart(spec: ExperimentSpec, target: str, cells: list[CellResult],
+                        skipped: list[str]) -> ChartDataset:
+    if not spec.metrics:
+        raise ValueError("chart_kind 'multi_metric' needs `metrics`")
+    series = []
+    many = len(spec.series) > 1
+    for ss in spec.series:
+        for m in spec.metrics:
+            pts = []
+            for cr in cells:
+                if cr.series != ss.name:
+                    continue
+                pt = _metric_point(cr.results, m.metric, cr.x)
+                if pt is None:
+                    skipped.append(f"{ss.name} x={cr.x}: {m.metric} undefined")
+                else:
+                    pts.append(pt)
+            if pts:
+                series.append(Series(name=f"{ss.name}: {m.name}" if many else m.name, points=pts))
+    notes = spec.description or ""
+    if skipped:
+        notes = (notes + " " if notes else "") + "NO POINT for: " + "; ".join(skipped) + "."
+    return ChartDataset(chart_id=spec.chart_id, title=spec.title, x_label=spec.x.label if spec.x else "",
+                        y_label=spec.y_label, x_scale=spec.x.scale if spec.x else "category", series=series,
+                        notes=notes or None, target=target, synthetic=False, experiment_id=spec.id,
+                        run_ids=[c.results.run_id for c in cells])
+
+
 def _build_chart(spec: ExperimentSpec, series_points: dict[str, list[Point]], target: str,
-                 cells: list[CellResult]) -> ChartDataset:
+                 cells: list[CellResult], skipped: list[str] | None = None) -> ChartDataset:
     series = [Series(name=name, points=pts) for name, pts in series_points.items() if pts]
     if spec.baseline is not None and spec.x is not None:
         base_pts = []
         for cr in cells:
             if cr.series == spec.series[0].name:  # one baseline point per x
                 p = _metric_point(cr.results, spec.baseline.metric, cr.x)
-                base_pts.append(Point(x=cr.x, y=p.y))
+                if p is not None:
+                    base_pts.append(Point(x=cr.x, y=p.y))
         if base_pts:
             series.append(Series(name=spec.baseline.name, points=base_pts))
     x_scale = spec.x.scale if spec.x else "category"
+    notes = spec.description or ""
+    if skipped:
+        notes = (notes + " " if notes else "") + "NO POINT for: " + "; ".join(skipped) + "."
     return ChartDataset(
         chart_id=spec.chart_id, title=spec.title, x_label=spec.x.label if spec.x else "",
         y_label=spec.y_label, x_scale=x_scale, series=series,
-        notes=(spec.description or None), target=target, synthetic=False,
+        notes=notes or None, target=target, synthetic=False,
         experiment_id=spec.id, run_ids=[c.results.run_id for c in cells])

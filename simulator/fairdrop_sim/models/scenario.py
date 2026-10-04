@@ -172,6 +172,9 @@ class AttackerConfig(_Strict):
     obey_retry_after: bool | None = None
     shared_device: bool | None = None
     pow_mode: Literal["real", "modelled_delay"] = "modelled_delay"
+    request_budget: int | None = Field(None, ge=1, description="cap on enter attempts per identity; "
+                                       "default is the profile's own budget (profiles.py)")
+    poll_interval_s: float = Field(1.0, gt=0, description="how often a bot polls /status in the claim phase")
     hash_rate: float = Field(5e6, gt=0, description="attacker H/s per identity (bots run native code)")
     captcha_solve_s_mean: float = Field(2.0, ge=0, description="paid solving-service latency per CAPTCHA")
     captcha_fail_rate: float = Field(0.02, ge=0, le=1)

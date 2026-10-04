@@ -242,10 +242,28 @@
       "additionalProperties": false,
       "properties": {
         "bot_seat_share": {
-          "$ref": "#/$defs/Stat"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null if no seat was confirmed in any run"
         },
         "bot_entrant_share": {
-          "$ref": "#/$defs/Stat"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null if nobody entered in any run"
         },
         "human_win_prob": {
           "$ref": "#/$defs/Stat"
@@ -314,8 +332,6 @@
         }
       },
       "required": [
-        "bot_seat_share",
-        "bot_entrant_share",
         "human_win_prob",
         "human_entry_success_rate"
       ],

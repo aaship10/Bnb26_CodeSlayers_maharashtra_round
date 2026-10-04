@@ -81,7 +81,11 @@ async def _detect_target(admin: AdminApi, sc: Scenario) -> str:
 
 
 async def execute_run(sc: Scenario, run_index: int, target: TargetConfig, out_dir: Path = DEFAULT_OUT,
-                      log: Callable[[str], None] = print) -> dict[str, Any]:
+                      log: Callable[[str], None] = print,
+                      progress_cb: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any]:
+    """`progress_cb` (optional) is called about once a second with
+    {t_s, phase, entries, states, requests?, planned_s}: t_s is seconds since the window
+    opened (negative during the lead-in), planned_s the planned run length after opening."""
     run_seed = derive_seed(sc.seed, "run", run_index)
     seed_hex = derive_seed_hex(sc.seed, "run", run_index)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -93,6 +97,7 @@ async def execute_run(sc: Scenario, run_index: int, target: TargetConfig, out_di
 
     admin = AdminApi(target.base_url, target.admin_token)
     pool: ProcessPoolExecutor | None = None
+    shard_futs: list[asyncio.Future] = []
     try:
         actual = await _detect_target(admin, sc)
         humans = build_humans(sc.legit.count, sc.legit.nat_groups, sc.seed)
@@ -128,13 +133,17 @@ async def execute_run(sc: Scenario, run_index: int, target: TargetConfig, out_di
         else:
             shard_futs = [asyncio.ensure_future(shard_main(specs[0]))]
 
-        draw_info = await _coordinate(admin, sc, event_id, t_close, t_draw, shard_futs, log, t_open)
+        draw_info = await _coordinate(admin, sc, event_id, t_close, t_draw, shard_futs, log, t_open,
+                                      progress_cb, t_end - t_open)
         shard_results = await asyncio.gather(*shard_futs)
 
         invariants = await admin.invariants(event_id)
         server = await load_server_view(actual, admin, event_id)
         stats = await admin.stats(event_id)
     finally:
+        for f in shard_futs:  # a cancelled/failed run must not leave load running against the target
+            if not f.done():
+                f.cancel()
         await admin.aclose()
         if pool is not None:
             pool.shutdown(cancel_futures=True)
@@ -167,10 +176,12 @@ async def execute_run(sc: Scenario, run_index: int, target: TargetConfig, out_di
 
 
 async def _coordinate(admin: AdminApi, sc: Scenario, event_id: str, t_close: float, t_draw: float,
-                      shard_futs: list[asyncio.Future], log: Callable[[str], None], t_open: float) -> dict[str, Any]:
+                      shard_futs: list[asyncio.Future], log: Callable[[str], None], t_open: float,
+                      progress_cb: Callable[[dict[str, Any]], None] | None = None,
+                      planned_s: float = 0.0) -> dict[str, Any]:
     """Progress lines every few seconds; close + draw at t_draw. Returns draw timing info."""
     info: dict[str, Any] = {"drawn": False}
-    next_progress = time.perf_counter()
+    next_progress = next_stats = time.perf_counter()
     with high_res_timer():
         while not all(f.done() for f in shard_futs):
             now = time.perf_counter()
@@ -184,14 +195,25 @@ async def _coordinate(admin: AdminApi, sc: Scenario, event_id: str, t_close: flo
                 info["drawn"] = True
                 info["draw_late_ms"] = round((time.perf_counter() - t_draw) * 1000, 1)
                 log(f"  draw done ({info['draw_late_ms']} ms after plan): {info.get('draw')}")
-            if now >= next_progress:
+            if now >= next_stats:
+                next_stats = now + (1.0 if progress_cb else 5.0)
                 try:
                     st = await admin.stats(event_id)
-                    log(f"  t={now - t_open:6.1f}s phase={st.get('phase'):<9} entries={st.get('entries', 0):>7,} "
-                        f"states={st.get('states')}")
+                    if now >= next_progress:
+                        log(f"  t={now - t_open:6.1f}s phase={st.get('phase'):<9} entries={st.get('entries', 0):>7,} "
+                            f"states={st.get('states')}")
+                        next_progress = now + 5.0
+                    if progress_cb:
+                        reqs = st.get("requests")  # mock only; A's stats may not carry request counters
+                        progress_cb({
+                            "t_s": round(now - t_open, 2), "phase": st.get("phase"),
+                            "entries": st.get("entries", 0), "states": st.get("states", {}),
+                            "requests": sum(v for k, v in reqs.items() if k in ("enter", "status", "claim"))
+                            if isinstance(reqs, dict) else None,
+                            "planned_s": planned_s,
+                        })
                 except Exception as e:  # progress is best-effort
                     log(f"  progress unavailable: {e}")
-                next_progress = now + 5.0
             # wake exactly at the draw time if it is near, otherwise every 250 ms
             until_draw = t_draw - time.perf_counter()
             await asyncio.sleep(0.25 if info["drawn"] or until_draw > 0.25 else max(0.0, until_draw))

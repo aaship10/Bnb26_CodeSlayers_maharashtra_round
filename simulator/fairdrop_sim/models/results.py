@@ -63,8 +63,11 @@ class AttackerCostPerSeat(_Model):
 
 
 class Fairness(_Model):
-    bot_seat_share: Stat
-    bot_entrant_share: Stat
+    # A share is 0/0, i.e. undefined, when nobody was seated (bot_seat_share) or nobody
+    # entered (bot_entrant_share): e.g. a defence preset that locks every identity out.
+    # We emit null and explain it in `notes` rather than invent a number.
+    bot_seat_share: Stat | None = Field(None, description="null if no seat was confirmed in any run")
+    bot_entrant_share: Stat | None = Field(None, description="null if nobody entered in any run")
     human_win_prob: Stat
     human_entry_success_rate: Stat
     arrival_time_correlation: Stat | None = Field(None, description="null if there were no entrants")

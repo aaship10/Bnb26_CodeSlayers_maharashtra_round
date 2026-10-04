@@ -1,0 +1,17 @@
+id: E7
+title: Chaos resilience (placeholder)
+description: >
+  REQUIRES Member B's infra/chaos scripts and the real multi-replica stack, so real chaos runs
+  happen in Stage 7. This is a placeholder that the Stage-7 chaos orchestrator (chaos_run.py)
+  will wrap: it injects faults (kill a replica, Redis restart, Postgres failover) during a run
+  and checks integrity and fairness hold. For now it only records the no-chaos baseline.
+chart_id: ablation_bot_share
+y_label: Bot seat share
+kind: runs
+base: base_exp_mock.yaml
+repeats: 3
+scale: "1,000 humans + 100 bots, mock, no chaos"
+series:
+  - name: "baseline (no chaos yet)"
+    overrides: {attackers: []}
+metric: fairness.bot_seat_share

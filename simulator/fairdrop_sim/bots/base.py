@@ -103,8 +103,11 @@ def _enter_schedule(ctx: BotContext, rnd: random.Random) -> tuple[float, float, 
         return start, interval, ctx.t_close + 0.5
     if beh.enter_window == "after_close":
         return ctx.t_close + off + jit(), interval, ctx.t_end
-    # "window": spread across the open window
-    start = ctx.t_open + off + (jit() if beh.enter_mode == "once" else 0.0)
+    # "window": the bot polls at `effective_rps` but its phase relative to the opening is
+    # unknown, so its first attempt lands uniformly within the first interval. A higher
+    # request rate therefore means an earlier first hit: that is what makes request volume
+    # matter under FCFS (and not under the lottery, whose draw ignores arrival time).
+    start = ctx.t_open + off + rnd.uniform(0, interval) + (jit() if beh.enter_mode == "once" else 0.0)
     return start, interval, ctx.t_close
 
 
@@ -113,7 +116,7 @@ async def _enter_once(ctx: BotContext, ident: Identity, out: BotOutcome, rnd: ra
     start, interval, phase_end = _enter_schedule(ctx, rnd)
     t = start
     challenge: tuple[str, str] | None = None
-    for _ in range(beh.budget):
+    for _ in range(ctx.attacker.request_budget or beh.budget):
         if t > phase_end + 1.0:
             break
         r = await _enter(ctx, ident, out, t, challenge)
@@ -151,7 +154,7 @@ async def _enter_flood(ctx: BotContext, ident: Identity, out: BotOutcome, rnd: r
     times and throttles them. Does not solve challenges - a flood is about volume."""
     start, interval, phase_end = _enter_schedule(ctx, rnd)
     span = max(0.0, phase_end - start)
-    n = min(ctx.behavior.budget, max(1, int(span / interval) + 1))
+    n = min(ctx.attacker.request_budget or ctx.behavior.budget, max(1, int(span / interval) + 1))
     times = [start + k * interval for k in range(n)]
     times = [t for t in times if t <= phase_end + 0.001]
     if not times:
@@ -176,7 +179,7 @@ async def _claim(ctx: BotContext, ident: Identity, out: BotOutcome, t: float, ke
 async def _claim_phase(ctx: BotContext, ident: Identity, out: BotOutcome, rnd: random.Random) -> None:
     """Poll status, claim the instant we are WON. Prompt, no human delay."""
     key = f"bclaim-{ctx.run_tag}-{ident.user_id}"
-    interval = 1.0
+    interval = ctx.attacker.poll_interval_s
     t = (ctx.t_draw if ctx.mode == "LOTTERY" else time.perf_counter()) + rnd.uniform(0, 0.2)
     if ctx.mode == "FCFS" and out.enter_state == "WON":
         await _claim(ctx, ident, out, t, key, rnd)

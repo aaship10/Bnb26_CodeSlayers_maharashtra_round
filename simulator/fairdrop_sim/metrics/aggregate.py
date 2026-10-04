@@ -127,11 +127,26 @@ def build_results(run_dirs: list[str | Path], *, run_id: str | None = None,
         den = sum(int(f[den_key]) for f in per_run_fair)
         return S.proportion_stat(num, den) if den > 0 else None
 
+    bot_seat_share = pooled("bot_final_seats", "all_final_seats")
+    bot_entrant_share = pooled("bot_entrants", "all_entrants")
+    human_win_prob = pooled("_human_seats", "_humans_intended")
+    human_entry_success = pooled("_human_entrants", "_humans_intended")
+    if human_win_prob is None or human_entry_success is None:
+        # Not a defence effect: the scenario simulated no humans, so there is nothing to measure.
+        raise ValueError("cannot aggregate: no legit users were simulated (humans_intended = 0 in every run)")
+
+    degenerate_notes: list[str] = []
+    if bot_seat_share is None:
+        degenerate_notes.append("bot_seat_share is null: no seat was confirmed in any run (0/0), "
+                                "e.g. every identity was locked out. Not a measured 0%.")
+    if bot_entrant_share is None:
+        degenerate_notes.append("bot_entrant_share is null: nobody entered in any run (0/0).")
+
     fairness = Fairness(
-        bot_seat_share=pooled("bot_final_seats", "all_final_seats") or fstat("bot_seat_share"),
-        bot_entrant_share=pooled("bot_entrants", "all_entrants") or fstat("bot_entrant_share"),
-        human_win_prob=pooled("_human_seats", "_humans_intended") or fstat("human_win_prob"),
-        human_entry_success_rate=pooled("_human_entrants", "_humans_intended") or fstat("human_entry_success_rate"),
+        bot_seat_share=bot_seat_share,
+        bot_entrant_share=bot_entrant_share,
+        human_win_prob=human_win_prob,
+        human_entry_success_rate=human_entry_success,
         arrival_time_correlation=fstat("arrival_time_correlation"),
         arrival_time_perm_p=F.pooled_arrival_perm_p(order_parts, won_parts, perm_resamples,
                                                     _boot_seed(master, "perm")),
@@ -173,7 +188,7 @@ def build_results(run_dirs: list[str | Path], *, run_id: str | None = None,
     integ = integrity_across_runs([r.meta.get("integrity", {}) for r in runs])
 
     pop = meta0.get("population", {})
-    notes = []
+    notes = list(degenerate_notes)
     if target == "mock":
         notes.append("MOCK target: development double, not evidence about the real system.")
     if jain is not None:

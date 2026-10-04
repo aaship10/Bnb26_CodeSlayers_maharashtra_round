@@ -196,6 +196,54 @@ def _cmd_experiment(a: argparse.Namespace) -> int:
     return 0 if out.integrity_passed else 2
 
 
+def _cmd_serve(a: argparse.Namespace) -> int:
+    """The /sim HTTP service D's panel drives (port 8100). Spawns its own mock for target=mock."""
+    import uvicorn
+
+    from fairdrop_sim.service.app import create_app
+
+    print(f"Fair Drop simulator service on http://{a.host}:{a.port}  (routes at / and /sim/)")
+    print("  mock runs: uses FD_MOCK_URL if set, else starts its own dev mock.  real runs: FD_REAL_URL "
+          "(default http://127.0.0.1:8000)")
+    uvicorn.run(create_app(), host=a.host, port=a.port, log_level="warning", access_log=False, timeout_keep_alive=75)
+    return 0
+
+
+def _cmd_suite(a: argparse.Namespace) -> int:
+    """Run experiment specs E1..E8 from scratch with their fixed seeds (regenerates every chart)."""
+    import asyncio
+    import os
+
+    from fairdrop_sim.engine.run import TargetConfig
+    from fairdrop_sim.runner.experiment import ExperimentSpec, MockNotAllowed, run_experiment
+
+    exp_dir = REPO_ROOT / "simulator" / "experiments"
+    wanted = [x.strip().upper() for x in a.only.split(",")] if a.only else None
+    specs = [p for p in sorted(exp_dir.glob("E[0-9]*.yaml")) if wanted is None or p.stem.upper() in wanted]
+    if not specs:
+        print("no matching experiment specs")
+        return 2
+    tgt = TargetConfig(base_url=a.base_url,
+                       admin_token=a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
+                       sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"))
+    out_root = Path(a.out) if a.out else REPO_ROOT / "simulator" / "results" / "experiments"
+    worst = 0
+    for path in specs:
+        spec = ExperimentSpec.from_yaml(path)
+        if a.repeats:
+            spec = spec.model_copy(update={"repeats": a.repeats})
+        try:
+            out = asyncio.run(run_experiment(spec, tgt, out_root, spec_path=path, allow_mock=a.allow_mock))
+        except MockNotAllowed as e:
+            print(f"REFUSED {spec.id}: {e}")
+            worst = max(worst, 2)
+            continue
+        if not out.integrity_passed:
+            worst = max(worst, 2)
+    print(f"\nsuite finished ({len(specs)} experiments); " + ("integrity PASSED" if worst == 0 else "SEE ABOVE"))
+    return worst
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="fdsim", description="Fair Drop simulator (Member C)")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -221,6 +269,21 @@ def main(argv: list[str] | None = None) -> int:
     sm.add_argument("--base-url", default="http://127.0.0.1:8200")
     sm.add_argument("--admin-token", default="dev-admin-token")
     sm.set_defaults(fn=_cmd_smoke)
+
+    sv = sub.add_parser("serve", help="run the /sim HTTP service on :8100 for the dashboard")
+    sv.add_argument("--host", default="127.0.0.1")
+    sv.add_argument("--port", type=int, default=8100)
+    sv.set_defaults(fn=_cmd_serve)
+
+    su = sub.add_parser("suite", help="run experiments E1..E8 from scratch (fixed seeds), regenerating every chart")
+    su.add_argument("--only", help="comma list, e.g. E1,E2")
+    su.add_argument("--base-url", default="http://127.0.0.1:8200")
+    su.add_argument("--allow-mock", action="store_true")
+    su.add_argument("--repeats", type=int)
+    su.add_argument("--admin-token")
+    su.add_argument("--sim-key")
+    su.add_argument("--out")
+    su.set_defaults(fn=_cmd_suite)
 
     ex = sub.add_parser("experiment", help="run an experiment spec (E1..E8): cells x repeats -> Results + chart")
     ex.add_argument("spec")
