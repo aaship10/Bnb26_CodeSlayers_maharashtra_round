@@ -13,6 +13,7 @@ from typing import Any
 from hdrh.histogram import HdrHistogram
 
 H_MIN_US, H_MAX_US, H_DIGITS = 1, 120_000_000, 3
+FAILURE_OUTCOMES = frozenset({"5xx", "TIMEOUT", "CONN_ERROR"})  # the server did not answer, or broke
 
 
 def new_hist() -> HdrHistogram:
@@ -43,7 +44,11 @@ class Recorder:
         self.service: dict[str, HdrHistogram] = {}
         self.sched_lag = new_hist()
         self.counts: Counter[str] = Counter()  # "<endpoint>.<class>|<outcome>"
-        self.timeline: Counter[str] = Counter()  # "<second>|<endpoint>.<class>|<outcome>"
+        self.timeline: Counter[str] = Counter()  # "<second>|<endpoint>.<class>|<outcome>", by INTENDED send time
+        # "<tenth of a second>|ok" / "...|fail" by COMPLETION time: when a failure is observed. This is
+        # what an outage is measured on; bucketing by intended time smears failures over the seconds the
+        # requests were scheduled in and hides a dip (found by the first real chaos run).
+        self.completions: Counter[str] = Counter()
         self.first_intended: float | None = None
         self.last_recv: float | None = None
 
@@ -61,6 +66,7 @@ class Recorder:
         out = outcome_of(status, code)
         self.counts[f"{key}|{out}"] += 1
         self.timeline[f"{int(intended - self.t0)}|{key}|{out}"] += 1
+        self.completions[f"{int((t_recv - self.t0) * 10)}|{'fail' if out in FAILURE_OUTCOMES else 'ok'}"] += 1
         if self.first_intended is None or intended < self.first_intended:
             self.first_intended = intended
         if self.last_recv is None or t_recv > self.last_recv:
@@ -77,6 +83,7 @@ class Recorder:
             "sched_lag": enc(self.sched_lag),
             "counts": dict(self.counts),
             "timeline": dict(self.timeline),
+            "completions": dict(self.completions),
             "first_intended": self.first_intended,
             "last_recv": self.last_recv,
         }
@@ -89,6 +96,7 @@ class Recorder:
         self.sched_lag.decode_and_add(d["sched_lag"])
         self.counts.update(d["counts"])
         self.timeline.update(d["timeline"])
+        self.completions.update(d.get("completions", {}))  # absent in recorders written before this field
         if d["first_intended"] is not None:
             opts = [v for v in (self.first_intended, d["first_intended"]) if v is not None]
             self.first_intended = min(opts)

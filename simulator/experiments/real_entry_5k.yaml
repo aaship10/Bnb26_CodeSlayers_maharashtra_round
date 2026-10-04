@@ -1,0 +1,27 @@
+# REAL target, entry path only: where does ONE replica saturate? 5,000 logical humans, 60% of them
+# arriving in the first 5% of a 30 s window (about 2,000 offered requests/s at the peak). Capacity of a
+# single Python process on a laptop that also runs the load generator and Postgres: a DEV-STACK
+# observation, not a verdict on A's design. Needs FD_REAL_DSN; see docs/FINDINGS.md.
+name: real_entry_5k
+description: Single-replica entry capacity under a 5k flash crowd (entry only; the engine has no draw yet).
+target: real
+seed: 20261004
+repeats: 2   # the model requires >= 2; this file is run one repeat at a time with --run-index
+event:
+  inventory: 250
+  window_seconds: 30
+  claim_ttl_seconds: 5
+  mode: LOTTERY
+  defences: {preset: none}
+legit:
+  count: 5000
+  arrival: {kind: spike_tail, spike_fraction: 0.6, spike_window_fraction: 0.05}
+  nat_groups: {fraction: 0.1, group_size: 50}
+  retry: {retry_fraction: 0.3, min_retries: 1, max_retries: 3, jitter_ms_mean: 1500}
+load:
+  max_in_flight: 300   # a Windows replica dies above ~500 sockets (select() fd cap): stay well below
+  procs: 2
+  lead_s: 3
+  request_timeout_s: 15
+  sim_client_ip: false
+auth_mode: dev_header

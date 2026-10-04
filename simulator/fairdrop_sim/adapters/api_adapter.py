@@ -214,6 +214,10 @@ class AdminApi:
             raise AdminError(what, r)
         return r.json() if r.content else None
 
+    async def call(self, what: str, method: str, url: str, **kw: Any) -> Any:
+        """Public form of _call: any admin route, raising AdminError on HTTP >= 400."""
+        return await self._call(what, method, url, **kw)
+
     async def health(self) -> dict[str, Any]:
         r = await self.c.get("/health")
         return r.json() if r.status_code == 200 else {}

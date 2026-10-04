@@ -36,12 +36,24 @@ def _boot_seed(master: int, label: str) -> int:
     return derive_seed(master, "metrics", label)
 
 
+class IncompleteRun(ValueError):
+    """The runs came from an engine that cannot allocate seats yet (no draw). Their seat-based fairness
+    numbers would be fabricated zeros, so no Results is built. The per-run run.json still has the
+    real load, latency and entry numbers."""
+
+
 def build_results(run_dirs: list[str | Path], *, run_id: str | None = None,
                   scenario_id: str | None = None, boot_resamples: int = 10_000,
                   perm_resamples: int = 10_000) -> Results:
     runs: list[RunData] = [load_run(d) for d in run_dirs]
     if not runs:
         raise ValueError("no runs to aggregate")
+    entry_only = [r.run_dir.name for r in runs if r.meta.get("entry_only")]
+    if entry_only:
+        raise IncompleteRun(
+            f"{len(entry_only)} of {len(runs)} run(s) are ENTRY-ONLY (the target had no draw endpoint), so seat-based "
+            "fairness cannot be computed and no Results file is built. Their run.json files hold the real "
+            f"load/latency/entry numbers. First: {entry_only[0]}")
     meta0 = runs[0].meta
     cfg = meta0.get("scenario_config", {})
     master = int(cfg.get("seed", meta0.get("run_seed", 0)))

@@ -39,14 +39,14 @@ FINAL_STATES = {"CLAIMED", "LOST", "EXPIRED"}
 
 
 class ChallengeSolver(Protocol):
-    async def solve(self, challenge: dict, rnd: random.Random) -> tuple[str, str] | None:
-        """Return (challenge_id, solution) or None to give up."""
+    async def solve(self, challenge: dict, rnd: random.Random, ident: object | None = None) -> tuple[str, str] | None:
+        """Return (challenge_id, solution) or None to give up. `ident` is the client's Identity."""
 
 
 class NoSolver:
     """Stage 2 placeholder: challenges are not solved yet (Stage 3 adds PoW + CAPTCHA)."""
 
-    async def solve(self, challenge: dict, rnd: random.Random) -> tuple[str, str] | None:
+    async def solve(self, challenge: dict, rnd: random.Random, ident: object | None = None) -> tuple[str, str] | None:
         return None
 
 
@@ -160,7 +160,7 @@ async def _enter_flow(ctx: HumanContext, ident: Identity, out: HumanOutcome, rnd
             return r.t_recv
         if r.code == "CHALLENGE_REQUIRED":
             ch = ((r.body or {}).get("details") or {}).get("challenge") if isinstance(r.body, dict) else None
-            challenge = await ctx.solver.solve(ch, rnd) if ch else None
+            challenge = await ctx.solver.solve(ch, rnd, ident) if ch else None
             if challenge is None:
                 out.gave_up = out.gave_up or "challenge_unsolved"
                 return r.t_recv
@@ -238,7 +238,7 @@ async def _claim_flow(ctx: HumanContext, ident: Identity, out: HumanOutcome, rnd
             t = r.t_recv + (r.retry_after_s or 1.0) + rnd.uniform(0, 0.5)
         elif r.code == "CHALLENGE_REQUIRED":
             ch = ((r.body or {}).get("details") or {}).get("challenge") if isinstance(r.body, dict) else None
-            challenge = await ctx.solver.solve(ch, rnd) if ch else None
+            challenge = await ctx.solver.solve(ch, rnd, ident) if ch else None
             if challenge is None:
                 out.gave_up = "claim_challenge_unsolved"
                 return

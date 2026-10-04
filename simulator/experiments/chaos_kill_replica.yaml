@@ -1,0 +1,20 @@
+# E7: hard-kill one API replica during the flash crowd, then bring it back, using Member B's inject-only commands.
+# Needs B's local stack running (`.\infra\fd.ps1 up -Edge nginx -Sim -Mail file`, with 3 replicas) and the
+# real engine behind it. Paths are relative to the working directory: run from the repo root, or edit `cwd`.
+#   fdsim chaos simulator/experiments/chaos_kill_replica.yaml --base-url http://127.0.0.1:8080
+# B's commands (Member_B_Pipeline/README.md): `python infra/local/run.py kill <port>` / `heal`.
+# UNTESTED against B's stack (it is not integrated with A's backend yet); the orchestration itself is tested
+# with harmless commands (tests/test_chaos_run.py) and was run for real against A's backend with a different
+# kill/heal pair (docs/FINDINGS.md, "Chaos").
+scenario: real_entry_small.yaml
+steps:
+  - name: kill-replica
+    role: inject
+    at_s: 3
+    argv: ["python", "infra/local/run.py", "kill", "8002"]
+    cwd: "Member_B_Pipeline"
+  - name: heal
+    role: heal
+    at_s: 9          # hold the fault for 6 s; the heal must START after the kill command has FINISHED
+    argv: ["python", "infra/local/run.py", "heal"]
+    cwd: "Member_B_Pipeline"

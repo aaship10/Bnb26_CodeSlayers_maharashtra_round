@@ -84,6 +84,43 @@ After every run: A's `GET /admin/events/{id}/invariants` and the draw verifier (
 
 Results report the **worst case across runs**. A single failing run sets `passed: false`, and that run is identified in `per_run`.
 
+## 5b. Entry-only runs (an engine that cannot draw yet)
+
+If the target has no draw endpoint (Member A's stage 2), a run is **ENTRY-ONLY**: the load, latency, availability
+and entry numbers are real, the claim phase is skipped, and `run.json` says `entry_only: true`. No seat can be
+allocated, so every seat-based number is undefined:
+
+- `human_win_prob` in `run.json` is `null` (never a convincing `0.0`), and `bot_seat_share` is `null` (0/0).
+- `build_results` / `fdsim metrics` **refuse** to aggregate entry-only runs (`IncompleteRun`), so no Results file,
+  chart or dashboard number can come from one. The per-run `run.json` is the report.
+- `integrity.draw_verified` is `null` unless a verifier is configured (`FD_VERIFY_CMD`); it is never a claimed `true`.
+
+The integrity block of a real run comes from C's **independent** SQL check of A's invariants I1-I7 (oversold,
+duplicate seats, duplicate users, state/allocation mismatch, orphaned holds, WON-without-hold, waitlist gaps),
+and, once A ships `/admin/events/{id}/invariants`, **both** must pass. I8 (audit chain), I9 (recomputing the draw)
+and I10 (window bounds) need A's code and are not covered by C's SQL.
+
+## 5c. Chaos runs (E7)
+
+`fdsim chaos` runs C's open-loop load while commands inject (and heal) a fault at chosen offsets. Requests are
+bucketed by **completion** time at 100 ms resolution (bucketing by intended send time smears failures over the
+seconds the requests were scheduled in and hides a dip; the first real chaos run exposed that).
+
+| Field | Definition |
+|---|---|
+| `requests_failed` | 5xx + timeouts + connection errors over the run |
+| `outage_seconds` | the longest stretch, from the fault on, with **no successful response** that contains at least one failure. Clients that back off leave silent buckets inside it, so silence counts; silence after recovery does not (the stretch ends at the next success). A partial failure (one replica of several) leaves successes between the failures, so it is not an outage |
+| `recovered` | `false` if the run ended while that stretch was still open |
+| `degraded_seconds` | whole seconds from the fault on whose failure share exceeds 5% |
+| `recovery_seconds` | from the heal command finishing to the end of the last failure; `0` if failures stopped first; `null` if nothing failed |
+| `invariants_passed` | the run's integrity block (see 5b). An availability dip is acceptable, an invariant violation never is |
+| `ordering_ok` | a heal that *starts before the inject finished* is a race and fails the run |
+| `steps_ok` | every fault command exited 0 and was due before the run ended |
+
+Control-plane calls (open / close / draw) retry transport failures and 5xx for up to 45 s, so a run survives an
+outage of the very target it is measuring. Every retry is counted in `run.json` (`control_retries`). Resolution is
+0.1 s; one run is one observation, so a single chaos run is a demonstration, not a distribution.
+
 ## 6. Repeats and reporting rules
 
 - 30 repeats at small scale (≤ 5k users) and at least 10 at 50k scale. Seeds come from `derive_seed(master, "run", i, ...)` and are recorded per run.

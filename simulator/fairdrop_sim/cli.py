@@ -130,6 +130,7 @@ def _cmd_load(a: argparse.Namespace) -> int:
         base_url=a.base_url,
         admin_token=a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
         sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"),
+        dsn=a.dsn or os.environ.get("FD_REAL_DSN"),
     )
     summary = asyncio.run(execute_run(sc, a.run_index, tgt, Path(a.out) if a.out else DEFAULT_OUT))
     print()
@@ -183,6 +184,7 @@ def _cmd_experiment(a: argparse.Namespace) -> int:
         base_url=a.base_url,
         admin_token=a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
         sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"),
+        dsn=a.dsn or os.environ.get("FD_REAL_DSN"),
     )
     out_root = Path(a.out) if a.out else (REPO_ROOT / "simulator" / "results" / "experiments")
     try:
@@ -225,7 +227,8 @@ def _cmd_suite(a: argparse.Namespace) -> int:
         return 2
     tgt = TargetConfig(base_url=a.base_url,
                        admin_token=a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
-                       sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"))
+                       sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"),
+                       dsn=a.dsn or os.environ.get("FD_REAL_DSN"))
     out_root = Path(a.out) if a.out else REPO_ROOT / "simulator" / "results" / "experiments"
     worst = 0
     for path in specs:
@@ -242,6 +245,46 @@ def _cmd_suite(a: argparse.Namespace) -> int:
             worst = max(worst, 2)
     print(f"\nsuite finished ({len(specs)} experiments); " + ("integrity PASSED" if worst == 0 else "SEE ABOVE"))
     return worst
+
+
+def _cmd_doctor(a: argparse.Namespace) -> int:
+    """Check a target against everything the simulator assumes; says what is missing and who owns it."""
+    import asyncio
+    import json
+    import os
+
+    from fairdrop_sim.doctor import run_doctor
+
+    rep = asyncio.run(run_doctor(a.base_url, a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
+                                 a.sim_key or os.environ.get("SIM_KEY"), a.dsn or os.environ.get("FD_REAL_DSN")))
+    print(json.dumps(rep.to_dict(), indent=2) if a.json else rep.render())
+    return 0 if rep.ok_for_full_run else 1
+
+
+def _cmd_chaos(a: argparse.Namespace) -> int:
+    """Run a scenario's load while commands inject (and heal) a fault at chosen offsets (E7)."""
+    import asyncio
+    import os
+    import yaml
+
+    from fairdrop_sim.engine.run import TargetConfig
+    from fairdrop_sim.models import Scenario
+    from fairdrop_sim.runner.chaos_run import ChaosStep, run_chaos
+
+    spec = yaml.safe_load(Path(a.spec).read_text(encoding="utf-8"))
+    base = Path(spec["scenario"])
+    sc = Scenario.from_yaml(base if base.is_absolute() else Path(a.spec).parent / base)
+    steps = [ChaosStep(name=x["name"], at_s=float(x["at_s"]), argv=[str(t) for t in x["argv"]], cwd=x.get("cwd"),
+                       timeout_s=float(x.get("timeout_s", 60)), role=x.get("role", "inject")) for x in spec["steps"]]
+    tgt = TargetConfig(base_url=a.base_url, admin_token=a.admin_token or os.environ.get("ADMIN_TOKEN", "dev-admin-token"),
+                       sim_key=a.sim_key or os.environ.get("SIM_KEY", "dev-sim-key"),
+                       dsn=a.dsn or os.environ.get("FD_REAL_DSN"))
+    out = asyncio.run(run_chaos(sc, steps, tgt, Path(a.out) if a.out else REPO_ROOT / "simulator" / "results" / "chaos"))
+    c = out.chaos
+    print(f"\nchaos: invariants {'PASSED' if c['invariants_passed'] else 'FAILED'} | steps ok: {c['steps_ok']} | "
+          f"requests_failed {c['requests_failed']} | outage {c['outage_seconds']}s | degraded {c['degraded_seconds']}s | "
+          f"recovery {c['recovery_seconds']}s" + (" | ENTRY-ONLY engine" if c["entry_only"] else "") + ("" if c["ordering_ok"] else " | ORDERING RACE: heal started before inject finished"))
+    return 0 if out.passed else 2
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -270,6 +313,23 @@ def main(argv: list[str] | None = None) -> int:
     sm.add_argument("--admin-token", default="dev-admin-token")
     sm.set_defaults(fn=_cmd_smoke)
 
+    dc = sub.add_parser("doctor", help="check a target against everything the simulator assumes (exit 1 if not ready)")
+    dc.add_argument("--base-url", default="http://127.0.0.1:8000")
+    dc.add_argument("--admin-token")
+    dc.add_argument("--sim-key")
+    dc.add_argument("--dsn", help="real target: Postgres DSN (or env FD_REAL_DSN)")
+    dc.add_argument("--json", action="store_true")
+    dc.set_defaults(fn=_cmd_doctor)
+
+    ch = sub.add_parser("chaos", help="run a scenario while commands inject a fault at chosen offsets (E7)")
+    ch.add_argument("spec", help="YAML: scenario path + steps [{name, at_s, argv, cwd, role}]")
+    ch.add_argument("--base-url", default="http://127.0.0.1:8000")
+    ch.add_argument("--admin-token")
+    ch.add_argument("--sim-key")
+    ch.add_argument("--dsn", help="real target: Postgres DSN (or env FD_REAL_DSN)")
+    ch.add_argument("--out")
+    ch.set_defaults(fn=_cmd_chaos)
+
     sv = sub.add_parser("serve", help="run the /sim HTTP service on :8100 for the dashboard")
     sv.add_argument("--host", default="127.0.0.1")
     sv.add_argument("--port", type=int, default=8100)
@@ -282,6 +342,7 @@ def main(argv: list[str] | None = None) -> int:
     su.add_argument("--repeats", type=int)
     su.add_argument("--admin-token")
     su.add_argument("--sim-key")
+    su.add_argument("--dsn", help="real target: Postgres DSN (or env FD_REAL_DSN)")
     su.add_argument("--out")
     su.set_defaults(fn=_cmd_suite)
 
@@ -292,6 +353,7 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--repeats", type=int, help="override the spec's repeats")
     ex.add_argument("--admin-token")
     ex.add_argument("--sim-key")
+    ex.add_argument("--dsn", help="real target: Postgres DSN (or env FD_REAL_DSN)")
     ex.add_argument("--out", help="experiment output root (default simulator/results/experiments)")
     ex.set_defaults(fn=_cmd_experiment)
 
@@ -311,6 +373,7 @@ def main(argv: list[str] | None = None) -> int:
     ld.add_argument("--procs", type=int, help="override load.procs")
     ld.add_argument("--admin-token")
     ld.add_argument("--sim-key")
+    ld.add_argument("--dsn", help="real target: Postgres DSN (or env FD_REAL_DSN)")
     ld.add_argument("--out", help="artifact directory (default simulator/results/runs)")
     ld.set_defaults(fn=_cmd_load)
 

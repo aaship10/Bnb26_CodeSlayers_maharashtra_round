@@ -231,7 +231,8 @@ def create_app(settings: Settings | None = None, clock: Clock | None = None) -> 
             store.tick(ev, now)
             if ev.phase == "OPEN":
                 ds.check(ev, "enter", uid, now, req.headers.get("x-challenge-id"),
-                         req.headers.get("x-challenge-solution"))
+                         req.headers.get("x-challenge-solution"),
+                         sim_key=settings.sim_key if settings.simulation_mode else None)
         e, already = store.enter(ev, uid, now, ip, device)
         return {"state": e.state, "entered_at": iso(e.entered_at), "already_entered": already, "server_now": iso(now)}
 
@@ -255,7 +256,8 @@ def create_app(settings: Settings | None = None, clock: Clock | None = None) -> 
         replay = ev.idempotency.get((uid, key))
         if replay is None:
             ev.defence_state.check(ev, "claim", uid, now, req.headers.get("x-challenge-id"),
-                                   req.headers.get("x-challenge-solution"))
+                                   req.headers.get("x-challenge-solution"),
+                                   sim_key=settings.sim_key if settings.simulation_mode else None)
         return {**store.claim(ev, uid, key, now), "server_now": iso(now)}
 
     @app.post("/defence/challenge")
@@ -288,6 +290,17 @@ def create_app(settings: Settings | None = None, clock: Clock | None = None) -> 
         except (TypeError, ValueError) as e:
             raise MockError(400, "VALIDATION_ERROR", str(e)) from None
         return event_view(ev)
+
+    @app.get("/admin/events")
+    async def admin_list(req: Request) -> list[dict[str, Any]]:
+        """All events including drafts (A has the same route; D's request A10)."""
+        require_admin(req)
+        return [event_view(ev) for ev in store.events.values()]
+
+    @app.get("/admin/events/{event_id}")
+    async def admin_get(event_id: str, req: Request) -> dict[str, Any]:
+        require_admin(req)
+        return event_view(store.get(event_id))
 
     @app.post("/admin/events/{event_id}/schedule")
     async def admin_schedule(event_id: str, req: Request) -> dict[str, Any]:

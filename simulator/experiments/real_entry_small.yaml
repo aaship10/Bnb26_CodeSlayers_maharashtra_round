@@ -1,0 +1,28 @@
+# REAL target, entry path only (Member A's backend has no draw/claim yet). 2,000 logical humans,
+# no attackers, no defences (Member B's package is not wired into A's backend yet). Run with:
+#   $env:FD_REAL_DSN = "postgresql://user:pw@host:5432/fairdrop"
+#   fdsim load experiments\real_entry_small.yaml --base-url http://127.0.0.1:8000
+# The result is an ENTRY-ONLY run.json: real load/latency/entry numbers, no fairness (it is withheld).
+name: real_entry_small
+description: Real entry path under a 2,000-user flash crowd. No draw available in the engine yet.
+target: real
+seed: 20261004
+repeats: 3
+event:
+  inventory: 100
+  window_seconds: 10
+  claim_ttl_seconds: 5
+  mode: LOTTERY
+  defences: {preset: none}
+legit:
+  count: 2000
+  arrival: {kind: spike_tail, spike_fraction: 0.6, spike_window_fraction: 0.05}
+  nat_groups: {fraction: 0.1, group_size: 50}
+  retry: {retry_fraction: 0.3, min_retries: 1, max_retries: 3, jitter_ms_mean: 1500}
+load:
+  max_in_flight: 200   # one Windows replica dies above ~500 sockets (select() fd cap), see FINDINGS
+  procs: 2
+  lead_s: 3
+  request_timeout_s: 10
+  sim_client_ip: false
+auth_mode: dev_header

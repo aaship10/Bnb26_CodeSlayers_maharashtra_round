@@ -52,6 +52,44 @@ What the simulator assumes about the other members' work. The simulator's own mo
 | D-C4 | Dev proxy | Run the simulator service (Stage 6) with `SIM_URL=http://127.0.0.1:8100 npm run dev`. Your default `/sim` target is your own mock on :8787. |
 | D-C5 | Extra fields | Results may gain new optional fields within `schema_version: 1`. Keep your zod schemas non-strict (strip unknown keys), which they already are. |
 
+## Integration probe against the real stack (2026-10-04, `origin/main` @ 10277c8)
+
+C ran A's **real, unmodified backend** on a real Postgres (A's migrations 0001/0002) and drove it with the
+simulator; B's package was read, not run (B's own docs say it has not been integrated into A). Everything below was
+observed, not inferred. Reproduce with `simulator/tools/dev_real_stack.py` and `fdsim doctor` (see FINDINGS.md).
+
+### For Member A
+
+| # | Finding | What C needs |
+|---|---------|--------------|
+| A-P1 | **No draw, claim, reset, stats, invariants, stream or `/readyz` yet** (A's README says stage 2). After `close`, an event stays in `DRAWING` forever: entries remain `ENTERED`, `draw_rank` is NULL. | Until `draw` and `claim` exist, no run can allocate a seat, so C can publish **no fairness number** from the real engine. C's runner detects this (`fdsim doctor`), runs the entry path only, and refuses to aggregate it. |
+| A-P2 | **FCFS entry answers `501 FCFS entry is not implemented yet`** (stage 5). | E1's FCFS arm cannot run against A until then. |
+| A-P3 | **A's Windows launcher dies, it does not degrade, above ~500 concurrent sockets.** `app.serve` runs on `asyncio.SelectorEventLoop(selectors.SelectSelector())` (needed by psycopg async); Windows `select()` is capped at 512 file descriptors, and the process exits with `ValueError: too many file descriptors in select()`. Reproduced with 500 in-flight client connections plus the DB pool. B's `infra/local/serve.py` uses the identical loop. | Document it, and keep per-replica concurrency under ~400 (clients + DB pool + listener), or run several replicas behind a balancer. B's flash-crowd tests went through B's gateway, which probably hides it. On Linux this does not apply. |
+| A-P4 | `app.serve` needs **Python >= 3.12** (`asyncio.run(..., loop_factory=)`); the rest of the backend compiles and runs on 3.11. | Say so in the README ("requires 3.12" is currently only in `pyproject`). |
+| A-P5 | `GET /events` returns an **envelope** `{events: [...], server_now}`; D's request A4 and zod schema assume a bare array. | Decide which side moves, and tell D. C's test pins the envelope (`tests/test_real_target.py`). |
+| A-P6 | Dev auth: a user id that is not in `users` gets `401 Unknown user` (so every simulated identity needs a real row). A **DRAFT** event answers `404` on public routes. | C provisions users by direct SQL (`sim_label` set, never read back). Nothing to change; recorded so nobody is surprised. |
+| A-P7 | `entries` has no client IP and no per-entry request count. | Fine for fairness; B's IP-based signals will need their own store. |
+| A-P8 | **Entry path, measured, with a caveat about the measurement.** 23 runs of a 2,000/5,000-user flash crowd on a single replica: **zero 5xx, zero timeouts**, every person told "entered" has exactly one entry and nobody else does, I1-I7 clean; the people not admitted were only ever turned away by `WINDOW_CLOSED` (requests still queued). But the **speed flipped about 10x between identical runs** on this laptop (enter service p50 81 to 89 ms in 5 runs, 841 to 1,230 ms in 15; 74 to 100% admitted) for reasons we could not isolate (ruled out: API process, data, fsync, port, stack age). | **No throughput figure can be taken from C's runs.** If A can reproduce a 10x swing on its own machine, that is worth a look (connection pool, Python scheduling, Windows hybrid-core behaviour); otherwise a second machine for the generator will tell us. FINDINGS.md section 3.1. |
+| A-P9 | What held: **no acknowledged write lost** across a hard kill and restart of the only API process (entries in the DB equal users told "entered"), idempotent `enter` (`already_entered: true`, same `entered_at`), window enforcement (`WINDOW_NOT_OPEN` / `WINDOW_CLOSED`), no rank fields before the draw, and C's independent I1-I7 SQL checks clean. | Thank you; nothing to do. |
+
+### For Member B
+
+| # | Finding | What C needs |
+|---|---------|--------------|
+| B-P1 | **B's package is not wired into A's backend** (B's docs say so). `/admin/defence/*`, `/admin/sim/tokens`, the gate and rate limits do not exist on A's app today. | Until integration, real-target runs have defences OFF only. C's detection metrics (E4) and the defence ablations (E2, E5) cannot be run against the real stack. |
+| B-P2 | **B-C5 answered.** MockCaptcha's simulator token is `sim1.<user32>.<event32>.<ts>.<mac32>` (HMAC-SHA256 under SIM_KEY, 300 s). C implemented `mint_sim_token` and checks it against **B's own function with golden vectors** (`tests/test_captcha_token.py`); the dev mock now accepts it too. | Please keep the format stable, or tell C. |
+| B-P3 | **B-C3 answered:** decisions are `GET /admin/defence/decisions?event_id=&cursor=&limit=&action=`, keyset-paginated. C's driver pages it. | The page body shape is assumed to be `{items|decisions: [...], next_cursor}`; please confirm. |
+| B-P4 | **R26 matters for C's results.** B's signals read `defence.identities` (registration device, IP, subnet, OTP latency). Simulated users without those rows get *neutral* identity signals, so a Sybil farm would look like a crowd of ordinary strangers. C has **not** provisioned those rows yet (B's schema is not in A's database). | When integrating, say which columns and what a *plausible* bot and human row look like. C will insert them, and will state that choice as a modelling assumption in FINDINGS (it encodes the attacker's registration behaviour). |
+| B-P5 | The Windows `select()` ceiling (A-P3) also applies to B's `infra/local/serve.py`. | See A-P3. |
+| B-P6 | B's `chaos.py` is a self-contained harness (own load, one fault, own checks), so it cannot run alongside C's load without doubling it. C's E7 instead fires **inject-only commands** (`python infra/local/run.py kill 8002`, then `heal`) at chosen offsets during C's load and measures the outage from C's own request timeline (`fdsim chaos`). | Confirm `run.py kill <port>` / `heal` return promptly and are safe to call from another process. B's own `chaos/results/*.json` stay B's evidence. |
+
+### For Member D
+
+| # | Finding | Action |
+|---|---------|--------|
+| D-P1 | A's `GET /events` is `{events, server_now}`, not a bare array (A-P5). | Your `eventListSchema` will reject the real response. Either A changes or your client unwraps. |
+| D-P2 | `/sim/*` is real now (D-C11..14) and the real target answers a precise 409 when the engine is incomplete: `TARGET_UNAVAILABLE` with a sentence such as "The real engine ... is reachable but incomplete: it has no draw, claim endpoint(s) yet." | Show `message` as-is; do not retry. |
+
 ## Answers to D's requests (from `INTERFACE_REQUESTS_D.md`, section "Member C")
 
 | D's # | Answer (2026-10-04) |

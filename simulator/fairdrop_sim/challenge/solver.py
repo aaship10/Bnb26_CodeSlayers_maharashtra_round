@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from fairdrop_sim.challenge import pow as powmod
-from fairdrop_sim.challenge.captcha import CaptchaModel
+from fairdrop_sim.challenge.captcha import CaptchaModel, mint_sim_token
 
 
 class CostSink(Protocol):
@@ -40,8 +40,12 @@ class Solver:
     captcha: CaptchaModel | None = None
     max_pow_bits: int = 28  # refuse absurd difficulty rather than hang a run
     sink: CostSink | None = None
+    # When both are set, a CAPTCHA solution is B's SIM_KEY-signed token for this user and event (what the
+    # real stack's mock provider accepts in simulation mode); otherwise the fixed demo token.
+    sim_key: str | None = None
+    event_id: str | None = None
 
-    async def solve(self, challenge: dict, rnd: random.Random) -> tuple[str, str] | None:
+    async def solve(self, challenge: dict, rnd: random.Random, ident: object | None = None) -> tuple[str, str] | None:
         ctype = challenge.get("type")
         cid = challenge.get("id")
         if not cid:
@@ -49,7 +53,7 @@ class Solver:
         if ctype == "pow":
             return await self._pow(cid, challenge.get("pow") or {}, rnd)
         if ctype == "captcha":
-            return await self._captcha(cid, rnd)
+            return await self._captcha(cid, rnd, getattr(ident, "user_id", None))
         if self.sink:
             self.sink.note_give_up(f"unknown_challenge:{ctype}")
         return None
@@ -69,7 +73,7 @@ class Solver:
             await asyncio.sleep(sol.hashes / self.hash_rate)
         return cid, sol.nonce
 
-    async def _captcha(self, cid: str, rnd: random.Random) -> tuple[str, str] | None:
+    async def _captcha(self, cid: str, rnd: random.Random, user_id: str | None = None) -> tuple[str, str] | None:
         model = self.captcha or CaptchaModel()
         await asyncio.sleep(model.solve_time(rnd))
         if self.sink:
@@ -78,4 +82,6 @@ class Solver:
             if self.sink:
                 self.sink.note_give_up("captcha_failed")
             return None
+        if self.sim_key and self.event_id and user_id:
+            return cid, mint_sim_token(self.sim_key, user_id, self.event_id)
         return cid, model.token

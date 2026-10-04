@@ -1,17 +1,19 @@
 id: E7
-title: Chaos resilience (placeholder)
+title: Chaos under load (invariants must hold)
 description: >
-  REQUIRES Member B's infra/chaos scripts and the real multi-replica stack, so real chaos runs
-  happen in Stage 7. This is a placeholder that the Stage-7 chaos orchestrator (chaos_run.py)
-  will wrap: it injects faults (kill a replica, Redis restart, Postgres failover) during a run
-  and checks integrity and fairness hold. For now it only records the no-chaos baseline.
+  Load while a fault is injected, then the invariants must pass. Use `fdsim chaos` with a chaos spec
+  (see experiments/chaos_kill_replica.yaml): inject-only commands fire at chosen offsets during C's load and
+  the outage is measured from C's own request timeline. This experiment spec stays a placeholder because a
+  chaos result is one run per fault, not a sweep with confidence intervals; the results live in
+  results/chaos/<run>/chaos.json. Needs Member B's stack for B's faults (kill a replica, restart Redis, pause
+  Postgres) and a multi-replica deployment. Against a single replica, restarting it is by definition a full outage.
 chart_id: ablation_bot_share
-y_label: Bot seat share
+y_label: invariants
 kind: runs
 base: base_exp_mock.yaml
 repeats: 3
-scale: "1,000 humans + 100 bots, mock, no chaos"
+scale: "1,000 humans, chaos injected via fdsim chaos"
 series:
-  - name: "baseline (no chaos yet)"
+  - name: baseline (no chaos)
     overrides: {attackers: []}
 metric: fairness.bot_seat_share

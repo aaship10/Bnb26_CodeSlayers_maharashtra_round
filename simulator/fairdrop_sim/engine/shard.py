@@ -110,7 +110,8 @@ async def shard_main(spec: ShardSpec) -> dict[str, Any]:
     rec = Recorder(spec.t_open)
     dev = sc.legit.device
     human_solver = Solver(hash_rate=math.exp(dev.hash_rate_lognormal_mu), pow_mode=dev.pow_mode,
-                          captcha=CaptchaModel(dev.captcha_solve_s_mean, dev.captcha_fail_rate))
+                          captcha=CaptchaModel(dev.captcha_solve_s_mean, dev.captcha_fail_rate),
+                          sim_key=spec.sim_key, event_id=spec.event_id)
     outcomes = {i: HumanOutcome(i) for i in mine}
     async with make_session(spec.base_url, in_flight, sc.load.keepalive_s) as session:
         sender = Sender(session, rec, in_flight, sc.load.request_timeout_s)
@@ -136,7 +137,8 @@ async def shard_main(spec: ShardSpec) -> dict[str, Any]:
         mint = partial(_mint, spec.base_url, spec.admin_token) if sc.auth_mode == "jwt_sim_tokens" else None
         attacker_coros = [
             run_attacker(bot_api_factory, sc, ai, atk, spec.shard, spec.nshards, spec.run_seed, spec.run_tag,
-                         spec.t_open, spec.t_close, spec.t_draw, spec.t_end, mint=mint)
+                         spec.t_open, spec.t_close, spec.t_draw, spec.t_end, mint=mint,
+                         sim_key=spec.sim_key, event_id=spec.event_id)
             for ai, atk in enumerate(sc.attackers)
         ]
         human_results, *attacker_results = await asyncio.gather(run_humans(), *attacker_coros)

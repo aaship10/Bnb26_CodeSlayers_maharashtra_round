@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
+
+from fairdrop_sim.challenge.captcha import verify_sim_token
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -138,7 +140,7 @@ class DefenceState:
         return view
 
     def check(self, ev: Event, endpoint: str, user_id: str, now: float,
-              challenge_id: str | None, solution: str | None) -> None:
+              challenge_id: str | None, solution: str | None, sim_key: str | None = None) -> None:
         """Raise CHALLENGE_REQUIRED until every required challenge for this user is solved.
         A solved challenge is single-use and covers this user for the rest of the event."""
         from .core import MockError
@@ -152,7 +154,8 @@ class DefenceState:
             ok = (
                 c is not None and c["user_id"] == user_id and c["type"] == kind and c["expires"] > now
                 and (verify_pow(c["prefix"], solution, c["difficulty_bits"]) if kind == "pow"
-                     else solution == CAPTCHA_OK_TOKEN)
+                     else (solution == CAPTCHA_OK_TOKEN
+                           or (sim_key is not None and verify_sim_token(solution, sim_key, user_id, ev.id, now))))
             )
             if ok:
                 self.passed[user_id].add(kind)

@@ -58,12 +58,13 @@ class BotOutcome:
     last_error: str | None = None
 
 
-def make_solver(a: AttackerConfig, beh: BotBehavior, sink: CostAccount) -> Solver:
+def make_solver(a: AttackerConfig, beh: BotBehavior, sink: CostAccount, sim_key: str | None = None,
+                event_id: str | None = None) -> Solver:
     return Solver(
         hash_rate=a.hash_rate,
         pow_mode=a.pow_mode,
         captcha=CaptchaModel(solve_s_mean=a.captcha_solve_s_mean, fail_rate=a.captcha_fail_rate),
-        sink=sink,
+        sink=sink, sim_key=sim_key, event_id=event_id,
     )
 
 
@@ -130,7 +131,7 @@ async def _enter_once(ctx: BotContext, ident: Identity, out: BotOutcome, rnd: ra
             solved = None
             if ch and ((ch.get("type") == "pow" and beh.solves_pow) or
                        (ch.get("type") == "captcha" and beh.solves_captcha)):
-                solved = await ctx.solver.solve(ch, rnd)
+                solved = await ctx.solver.solve(ch, rnd, ident)
             if solved is None:
                 ctx.cost.note_give_up("enter_challenge")
                 return
@@ -232,7 +233,8 @@ async def run_bot_identity(ctx: BotContext, idx: int, ident: Identity, out: BotO
 
 async def run_attacker(sender_api_factory, sc, attacker_index: int, attacker: AttackerConfig,
                        shard: int, nshards: int, run_seed: int, run_tag: str,
-                       t_open: float, t_close: float, t_draw: float, t_end: float, mint=None) -> dict:
+                       t_open: float, t_close: float, t_draw: float, t_end: float, mint=None,
+                       sim_key: str | None = None, event_id: str | None = None) -> dict:
     """Run one attacker's identities owned by this shard. `sender_api_factory()` returns a
     UserApi bound to the event. `mint(user_ids)` (jwt mode only) returns {user_id: token}."""
     beh = behavior_for(attacker.profile, {
@@ -248,7 +250,7 @@ async def run_attacker(sender_api_factory, sc, attacker_index: int, attacker: At
         run_seed=run_seed, run_tag=run_tag, mode=sc.event.mode, t_open=t_open, t_close=t_close,
         t_draw=t_draw, t_end=t_end, solver=Solver(), cost=cost,
     )
-    ctx.solver = make_solver(attacker, beh, cost)
+    ctx.solver = make_solver(attacker, beh, cost, sim_key, event_id)
     tokens = await mint([bots.user_ids[i] for i in mine]) if mint else {}
     outcomes = {i: BotOutcome(i) for i in mine}
     idents = {i: Identity(bots.user_ids[i], bots.device_ids[i], bots.client_ips[i],

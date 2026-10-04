@@ -89,6 +89,50 @@ A `Stat` always carries a real CI; fields that can lack one are emitted as a bar
 (`system.*`, `detection.*`, `attacker_cost_per_seat.*`), and `null` means not applicable.
 The real aggregate validates against D's own zod schema (`tests/test_frontend_contract.py`).
 
+## Real target (Stage 7)
+
+The simulator drives either the in-memory **mock** or **Member A's real backend** (a Postgres-backed FastAPI app) through
+a *driver* (`adapters/driver.py`). Everything specific to A's routes and schema lives in `adapters/driver.py`,
+`adapters/capabilities.py` and `adapters/real_db.py`; the runner never touches a route or a column.
+
+**Status (read FINDINGS.md first):** A's backend is at its stage 2: it has no draw or claim, B's defences are not wired in, and
+the runs below measure the **entry path only**. The runner detects this itself, and refuses to publish a seat-based number.
+
+### Prerequisites
+
+| Need | Why |
+|---|---|
+| A's backend running (default `http://127.0.0.1:8000`) | the target |
+| `FD_REAL_DSN` = a Postgres DSN for A's database | provisioning the simulated users (A's dev auth answers 401 for an id that is not in `users`) and reading entries for analytics. Use a read-only role for analytics where you can |
+| `pip install -e ".[db]"` (psycopg) | the database adapter |
+| `ADMIN_TOKEN` (default `dev-admin-token`), `SIM_KEY` if B's simulation mode is on | admin routes; fake client IPs and CAPTCHA tokens |
+| optional `FD_VERIFY_CMD`, `FD_VERIFY_CWD` | A's draw verifier, e.g. `python -m app.verify_draw {event_id}` run in A's backend dir. Unset means `draw_verified` is `null`, never a claimed `true` |
+
+No PostgreSQL install or Python 3.12? `tools/dev_real_stack.py` stands up A's unmodified backend with a bundled Postgres on
+Python 3.11 (see its docstring; it is a dev stack, not what A and B ship).
+
+### Commands
+
+```powershell
+fdsim doctor --base-url http://127.0.0.1:8000        # every assumption checked; says what is missing and who owns it; exit 1 if not ready
+fdsim load experiments\real_entry_small.yaml --base-url http://127.0.0.1:8000 --run-index 0   # entry path, 2,000 users
+fdsim chaos spec.yaml --base-url http://127.0.0.1:8000    # E7: fault commands fire at chosen offsets during the load
+pytest tests\test_real_target.py                      # needs FD_REAL_URL and FD_REAL_DSN; pins A's real shapes (skips otherwise)
+```
+
+- **`fdsim doctor`** reads the server's own OpenAPI document, so it never guesses from a 404. Against A today it reports
+  exactly two blocking gaps (`draw`, `claim`) and warns on the rest (`reset`, `stats`, `invariants`, `readyz`, `stream`, B's endpoints).
+- **Entry-only runs.** With no draw, a run is marked `entry_only`: load, latency and entry numbers are real, `human_win_prob`
+  and `bot_seat_share` are `null`, and `fdsim metrics` / the experiment runner **refuse** to aggregate it (`IncompleteRun`).
+- **A fresh event per run** (A has no reset); A owns the draw seed (commit-reveal), so repeats are independent draws.
+- **Integrity** is checked twice: C's own SQL for A's invariants I1-I7, and A's `/invariants` endpoint once it exists. Both must pass.
+- **Chaos** (`runner/chaos_run.py`): a spec lists commands with offsets (`inject`/`heal`); the outage is computed from the
+  simulator's own request timeline, by completion time. A heal that starts before the inject has finished is flagged as a race.
+  `experiments/chaos_kill_replica.yaml` is wired to B's `run.py kill|heal` (untested: B is not integrated yet).
+- **Windows limit:** one replica dies, rather than degrading, above about 500 concurrent sockets (select() fd cap, the same
+  event loop A's and B's launchers use). Keep `load.max_in_flight` near 300 per replica.
+- **CAPTCHA:** the solver emits B's `sim1.` token (verified byte for byte against B's own function) when a `SIM_KEY` is set.
+
 ## Charts and the /sim service (Stage 6)
 
 ### Charts

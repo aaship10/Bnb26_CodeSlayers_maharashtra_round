@@ -29,8 +29,11 @@ def summarize(*, sc: Scenario, run_id: str, run_index: int, run_seed: int, seed_
               event_id: str, rec: Recorder, humans, outcomes: list[dict], server: dict[str, Any],
               invariants: dict[str, Any], stats: dict[str, Any], draw_info: dict[str, Any], crashed: int,
               crash_samples: list[str], attackers: list[dict] | None = None,
-              bots_by_attacker: dict | None = None) -> dict[str, Any]:
+              bots_by_attacker: dict | None = None, environment: dict[str, Any] | None = None,
+              hooks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     attackers = attackers or []
+    environment = environment or {}
+    entry_only = bool(environment.get("entry_only"))
     bots_by_attacker = bots_by_attacker or {}
     n = len(outcomes)
     entered = sum(o["entered"] for o in outcomes)
@@ -106,6 +109,12 @@ def summarize(*, sc: Scenario, run_id: str, run_index: int, run_seed: int, seed_
         warnings.append(f"{n_to:,} requests timed out, {n_conn:,} connection errors")
     if crashed:
         warnings.append(f"{crashed} simulated users crashed (bug in the simulator): {crash_samples[:3]}")
+    if entry_only:
+        warnings.append("ENTRY-ONLY RUN: the target has no draw, so no seats were allocated. Load, latency and "
+                        "entry numbers are real; every seat-based fairness number is undefined and withheld.")
+    for h in hooks or []:
+        if not h.get("ok"):
+            warnings.append(f"hook {h.get('name')} did not run cleanly: {h.get('error')}")
     if not invariants.get("passed"):
         warnings.append(f"INVARIANTS FAILED: {invariants}")
 
@@ -136,6 +145,10 @@ def summarize(*, sc: Scenario, run_id: str, run_index: int, run_seed: int, seed_
         "server_seed_hex": seed_hex,
         "target": target,
         "synthetic": False,
+        "entry_only": entry_only,
+        "environment": environment,
+        "hooks": hooks or [],
+        "control_retries": int((draw_info or {}).get("control_retries", 0)),
         "event_id": event_id,
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "population": {"legit": n, "bots": len(attackers), "bot_identities": len(bot_ids), "nat_users": len(nat)},
@@ -160,7 +173,8 @@ def summarize(*, sc: Scenario, run_id: str, run_index: int, run_seed: int, seed_
             "draw_states": dict(draw_states),
             "final_states": dict(srv_states),
             "claimed_client": claimed,
-            "human_win_prob": round(fairness["human_final_seats"] / n, 6) if n else None,
+            # no draw => no seats could be won: null, never a convincing 0.0
+            "human_win_prob": None if entry_only else (round(fairness["human_final_seats"] / n, 6) if n else None),
             "gave_up": dict(Counter(o["gave_up"] for o in outcomes if o["gave_up"])),
             "requests_per_human": round(total / n, 2) if n else None,
         },
