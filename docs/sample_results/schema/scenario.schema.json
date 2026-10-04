@@ -1,0 +1,782 @@
+{
+  "$defs": {
+    "ArrivalModel": {
+      "additionalProperties": false,
+      "description": "spike_tail: `spike_fraction` of users arrive in the first `spike_window_fraction`\nof the window with exponential decay (time constant `spike_tau_fraction` of the\nwindow); the rest arrive uniformly over the whole window. uniform: all uniform.",
+      "properties": {
+        "kind": {
+          "default": "spike_tail",
+          "enum": [
+            "spike_tail",
+            "uniform"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "spike_fraction": {
+          "default": 0.6,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Spike Fraction",
+          "type": "number"
+        },
+        "spike_window_fraction": {
+          "default": 0.05,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Spike Window Fraction",
+          "type": "number"
+        },
+        "spike_tau_fraction": {
+          "default": 0.015,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Spike Tau Fraction",
+          "type": "number"
+        }
+      },
+      "title": "ArrivalModel",
+      "type": "object"
+    },
+    "AttackerConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "enum": [
+            "naive_flooder",
+            "speed_bot",
+            "retry_spammer",
+            "sybil_single_ip",
+            "distributed_botnet",
+            "human_mimic",
+            "late_flooder",
+            "window_edge_bot",
+            "claim_sniper"
+          ],
+          "title": "Profile",
+          "type": "string"
+        },
+        "identities": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Identities",
+          "type": "integer"
+        },
+        "ips": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Ips",
+          "type": "integer"
+        },
+        "rps_per_identity": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Rps Per Identity",
+          "type": "number"
+        },
+        "request_multiplier": {
+          "default": 1.0,
+          "description": "E1 knob: scales rps relative to a human",
+          "exclusiveMinimum": 0,
+          "title": "Request Multiplier",
+          "type": "number"
+        },
+        "start_offset_s": {
+          "default": 0.0,
+          "title": "Start Offset S",
+          "type": "number"
+        },
+        "duration_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration S"
+        },
+        "timing_jitter_ms": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Timing Jitter Ms",
+          "type": "number"
+        },
+        "solves_pow": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solves Pow"
+        },
+        "solves_captcha": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solves Captcha"
+        },
+        "obey_retry_after": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Obey Retry After"
+        },
+        "shared_device": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shared Device"
+        },
+        "pow_mode": {
+          "default": "modelled_delay",
+          "enum": [
+            "real",
+            "modelled_delay"
+          ],
+          "title": "Pow Mode",
+          "type": "string"
+        },
+        "hash_rate": {
+          "default": 5000000.0,
+          "description": "attacker H/s per identity (bots run native code)",
+          "exclusiveMinimum": 0,
+          "title": "Hash Rate",
+          "type": "number"
+        },
+        "captcha_solve_s_mean": {
+          "default": 2.0,
+          "description": "paid solving-service latency per CAPTCHA",
+          "minimum": 0,
+          "title": "Captcha Solve S Mean",
+          "type": "number"
+        },
+        "captcha_fail_rate": {
+          "default": 0.02,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Captcha Fail Rate",
+          "type": "number"
+        },
+        "cost": {
+          "$ref": "#/$defs/AttackerCost",
+          "default": {
+            "per_account": 0.1,
+            "per_ip": 0.5,
+            "per_captcha": 0.002,
+            "per_1e9_hashes": 0.01,
+            "per_1e6_requests": 0.05
+          }
+        }
+      },
+      "required": [
+        "profile"
+      ],
+      "title": "AttackerConfig",
+      "type": "object"
+    },
+    "AttackerCost": {
+      "additionalProperties": false,
+      "description": "Modelled attacker money cost (USD). Explicitly a model, not a measurement.",
+      "properties": {
+        "per_account": {
+          "default": 0.1,
+          "minimum": 0,
+          "title": "Per Account",
+          "type": "number"
+        },
+        "per_ip": {
+          "default": 0.5,
+          "minimum": 0,
+          "title": "Per Ip",
+          "type": "number"
+        },
+        "per_captcha": {
+          "default": 0.002,
+          "minimum": 0,
+          "title": "Per Captcha",
+          "type": "number"
+        },
+        "per_1e9_hashes": {
+          "default": 0.01,
+          "minimum": 0,
+          "title": "Per 1E9 Hashes",
+          "type": "number"
+        },
+        "per_1e6_requests": {
+          "default": 0.05,
+          "minimum": 0,
+          "title": "Per 1E6 Requests",
+          "type": "number"
+        }
+      },
+      "title": "AttackerCost",
+      "type": "object"
+    },
+    "ClaimBehaviour": {
+      "additionalProperties": false,
+      "description": "Winners claim after a lognormal delay (seconds); `no_show_rate` never claim.",
+      "properties": {
+        "delay_lognormal_mu": {
+          "default": 2.0,
+          "title": "Delay Lognormal Mu",
+          "type": "number"
+        },
+        "delay_lognormal_sigma": {
+          "default": 0.8,
+          "minimum": 0,
+          "title": "Delay Lognormal Sigma",
+          "type": "number"
+        },
+        "no_show_rate": {
+          "default": 0.05,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "No Show Rate",
+          "type": "number"
+        }
+      },
+      "title": "ClaimBehaviour",
+      "type": "object"
+    },
+    "DefenceConfig": {
+      "additionalProperties": false,
+      "description": "Mirrors events.config.defences. `layers` is only required for preset=custom;\nfor named presets the server expands the preset and `layers` may override params.",
+      "properties": {
+        "preset": {
+          "default": "none",
+          "enum": [
+            "none",
+            "rate_limit",
+            "rate_limit+pow",
+            "rate_limit+pow+captcha",
+            "all",
+            "custom"
+          ],
+          "title": "Preset",
+          "type": "string"
+        },
+        "layers": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layers"
+        }
+      },
+      "title": "DefenceConfig",
+      "type": "object"
+    },
+    "DeviceModel": {
+      "additionalProperties": false,
+      "description": "Human device PoW speed. pow_mode=real solves with this machine's CPU;\nmodelled_delay solves for real (the server must verify) but then waits until\nthe modelled device time (hashes / hash_rate) has elapsed.",
+      "properties": {
+        "pow_mode": {
+          "default": "modelled_delay",
+          "enum": [
+            "real",
+            "modelled_delay"
+          ],
+          "title": "Pow Mode",
+          "type": "string"
+        },
+        "hash_rate_lognormal_mu": {
+          "default": 13.8,
+          "title": "Hash Rate Lognormal Mu",
+          "type": "number"
+        },
+        "hash_rate_lognormal_sigma": {
+          "default": 0.7,
+          "minimum": 0,
+          "title": "Hash Rate Lognormal Sigma",
+          "type": "number"
+        },
+        "captcha_solve_s_mean": {
+          "default": 8.0,
+          "minimum": 0,
+          "title": "Captcha Solve S Mean",
+          "type": "number"
+        },
+        "captcha_fail_rate": {
+          "default": 0.05,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Captcha Fail Rate",
+          "type": "number"
+        }
+      },
+      "title": "DeviceModel",
+      "type": "object"
+    },
+    "EventConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "inventory": {
+          "default": 500,
+          "minimum": 1,
+          "title": "Inventory",
+          "type": "integer"
+        },
+        "window_seconds": {
+          "default": 60,
+          "exclusiveMinimum": 0,
+          "title": "Window Seconds",
+          "type": "number"
+        },
+        "claim_ttl_seconds": {
+          "default": 60,
+          "exclusiveMinimum": 0,
+          "title": "Claim Ttl Seconds",
+          "type": "number"
+        },
+        "mode": {
+          "default": "LOTTERY",
+          "enum": [
+            "LOTTERY",
+            "FCFS"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "defences": {
+          "$ref": "#/$defs/DefenceConfig",
+          "default": {
+            "preset": "none",
+            "layers": null
+          }
+        }
+      },
+      "title": "EventConfig",
+      "type": "object"
+    },
+    "LegitConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "default": 50000,
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "arrival": {
+          "$ref": "#/$defs/ArrivalModel",
+          "default": {
+            "kind": "spike_tail",
+            "spike_fraction": 0.6,
+            "spike_window_fraction": 0.05,
+            "spike_tau_fraction": 0.015
+          }
+        },
+        "retry": {
+          "$ref": "#/$defs/RetryModel",
+          "default": {
+            "retry_fraction": 0.3,
+            "min_retries": 1,
+            "max_retries": 3,
+            "jitter_ms_mean": 1500.0
+          }
+        },
+        "nat_groups": {
+          "$ref": "#/$defs/NatGroups",
+          "default": {
+            "fraction": 0.1,
+            "group_size": 50
+          }
+        },
+        "poll": {
+          "$ref": "#/$defs/PollModel",
+          "default": {
+            "mode": "sse_sample",
+            "interval_s_mean": 10.0,
+            "max_polls": 30,
+            "waitlist_attention": 2.0
+          }
+        },
+        "claim": {
+          "$ref": "#/$defs/ClaimBehaviour",
+          "default": {
+            "delay_lognormal_mu": 2.0,
+            "delay_lognormal_sigma": 0.8,
+            "no_show_rate": 0.05
+          }
+        },
+        "network": {
+          "$ref": "#/$defs/NetworkModel",
+          "default": {
+            "latency_lognormal_mu": 3.9,
+            "latency_lognormal_sigma": 0.5
+          }
+        },
+        "device": {
+          "$ref": "#/$defs/DeviceModel",
+          "default": {
+            "pow_mode": "modelled_delay",
+            "hash_rate_lognormal_mu": 13.8,
+            "hash_rate_lognormal_sigma": 0.7,
+            "captcha_solve_s_mean": 8.0,
+            "captcha_fail_rate": 0.05
+          }
+        },
+        "register_sample": {
+          "default": 0,
+          "description": "users that go through the real registration flow",
+          "minimum": 0,
+          "title": "Register Sample",
+          "type": "integer"
+        }
+      },
+      "title": "LegitConfig",
+      "type": "object"
+    },
+    "LoadConfig": {
+      "additionalProperties": false,
+      "description": "Load-generator settings. Requests are scheduled open-loop at intended times;\nmax_in_flight caps concurrent requests (split evenly across procs) and any wait\nfor a slot counts toward latency, which is measured from the intended time.",
+      "properties": {
+        "max_in_flight": {
+          "default": 2000,
+          "minimum": 1,
+          "title": "Max In Flight",
+          "type": "integer"
+        },
+        "procs": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Procs",
+          "type": "integer"
+        },
+        "request_timeout_s": {
+          "default": 10,
+          "exclusiveMinimum": 0,
+          "title": "Request Timeout S",
+          "type": "number"
+        },
+        "lead_s": {
+          "default": 5.0,
+          "description": "time between scheduling the event and the window opening",
+          "minimum": 1,
+          "title": "Lead S",
+          "type": "number"
+        },
+        "draw_delay_s": {
+          "default": 1.0,
+          "description": "admin draw this long after the window closes",
+          "minimum": 0,
+          "title": "Draw Delay S",
+          "type": "number"
+        },
+        "claim_phase_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "run end after the draw; default 3 x claim TTL",
+          "title": "Claim Phase S"
+        },
+        "sim_client_ip": {
+          "default": true,
+          "description": "send X-Sim-Client-IP + X-Sim-Key so each client has its own IP",
+          "title": "Sim Client Ip",
+          "type": "boolean"
+        },
+        "keepalive_s": {
+          "default": 15.0,
+          "description": "client idle-connection lifetime; keep below the server's",
+          "exclusiveMinimum": 0,
+          "title": "Keepalive S",
+          "type": "number"
+        }
+      },
+      "title": "LoadConfig",
+      "type": "object"
+    },
+    "NatGroups": {
+      "additionalProperties": false,
+      "description": "A fraction of humans share client IPs in groups (campus/CGNAT).",
+      "properties": {
+        "fraction": {
+          "default": 0.1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Fraction",
+          "type": "number"
+        },
+        "group_size": {
+          "default": 50,
+          "minimum": 1,
+          "title": "Group Size",
+          "type": "integer"
+        }
+      },
+      "title": "NatGroups",
+      "type": "object"
+    },
+    "NetworkModel": {
+      "additionalProperties": false,
+      "description": "Modelled client-side one-way latency added before each send (ms, lognormal).",
+      "properties": {
+        "latency_lognormal_mu": {
+          "default": 3.9,
+          "title": "Latency Lognormal Mu",
+          "type": "number"
+        },
+        "latency_lognormal_sigma": {
+          "default": 0.5,
+          "minimum": 0,
+          "title": "Latency Lognormal Sigma",
+          "type": "number"
+        }
+      },
+      "title": "NetworkModel",
+      "type": "object"
+    },
+    "PollModel": {
+      "additionalProperties": false,
+      "description": "How humans learn their outcome after the window closes.\n\nEach human checks /status at draw time + Exp(interval_s_mean), then every\nExp(interval_s_mean) until the outcome is final or max_polls is reached.\nWaitlisted humans keep checking only if their waitlist position is within\n`waitlist_attention` x inventory (someone 38,000th in line stops refreshing).\n`sse_sample`: the page would get pushed updates over SSE; we sample that state\nwith the same GETs, so SSE connection load itself is NOT measured (limitation).",
+      "properties": {
+        "mode": {
+          "default": "sse_sample",
+          "enum": [
+            "poll",
+            "sse_sample"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "interval_s_mean": {
+          "default": 10,
+          "exclusiveMinimum": 0,
+          "title": "Interval S Mean",
+          "type": "number"
+        },
+        "max_polls": {
+          "default": 30,
+          "minimum": 1,
+          "title": "Max Polls",
+          "type": "integer"
+        },
+        "waitlist_attention": {
+          "default": 2.0,
+          "minimum": 0,
+          "title": "Waitlist Attention",
+          "type": "number"
+        }
+      },
+      "title": "PollModel",
+      "type": "object"
+    },
+    "RetryModel": {
+      "additionalProperties": false,
+      "description": "A fraction of humans refresh/retry enter 1..max_retries extra times with jitter.",
+      "properties": {
+        "retry_fraction": {
+          "default": 0.3,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Retry Fraction",
+          "type": "number"
+        },
+        "min_retries": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Min Retries",
+          "type": "integer"
+        },
+        "max_retries": {
+          "default": 3,
+          "minimum": 0,
+          "title": "Max Retries",
+          "type": "integer"
+        },
+        "jitter_ms_mean": {
+          "default": 1500,
+          "minimum": 0,
+          "title": "Jitter Ms Mean",
+          "type": "number"
+        }
+      },
+      "title": "RetryModel",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    },
+    "event_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "target event id; default evt_sim_<name>",
+      "title": "Event Id"
+    },
+    "target": {
+      "default": "mock",
+      "enum": [
+        "real",
+        "mock"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "seed": {
+      "default": 20261101,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "repeats": {
+      "default": 30,
+      "description": "at least 2: one run has no uncertainty estimate",
+      "minimum": 2,
+      "title": "Repeats",
+      "type": "integer"
+    },
+    "event": {
+      "$ref": "#/$defs/EventConfig",
+      "default": {
+        "inventory": 500,
+        "window_seconds": 60.0,
+        "claim_ttl_seconds": 60.0,
+        "mode": "LOTTERY",
+        "defences": {
+          "layers": null,
+          "preset": "none"
+        }
+      }
+    },
+    "legit": {
+      "$ref": "#/$defs/LegitConfig",
+      "default": {
+        "count": 50000,
+        "arrival": {
+          "kind": "spike_tail",
+          "spike_fraction": 0.6,
+          "spike_tau_fraction": 0.015,
+          "spike_window_fraction": 0.05
+        },
+        "retry": {
+          "jitter_ms_mean": 1500.0,
+          "max_retries": 3,
+          "min_retries": 1,
+          "retry_fraction": 0.3
+        },
+        "nat_groups": {
+          "fraction": 0.1,
+          "group_size": 50
+        },
+        "poll": {
+          "interval_s_mean": 10.0,
+          "max_polls": 30,
+          "mode": "sse_sample",
+          "waitlist_attention": 2.0
+        },
+        "claim": {
+          "delay_lognormal_mu": 2.0,
+          "delay_lognormal_sigma": 0.8,
+          "no_show_rate": 0.05
+        },
+        "network": {
+          "latency_lognormal_mu": 3.9,
+          "latency_lognormal_sigma": 0.5
+        },
+        "device": {
+          "captcha_fail_rate": 0.05,
+          "captcha_solve_s_mean": 8.0,
+          "hash_rate_lognormal_mu": 13.8,
+          "hash_rate_lognormal_sigma": 0.7,
+          "pow_mode": "modelled_delay"
+        },
+        "register_sample": 0
+      }
+    },
+    "attackers": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/AttackerConfig"
+      },
+      "title": "Attackers",
+      "type": "array"
+    },
+    "load": {
+      "$ref": "#/$defs/LoadConfig",
+      "default": {
+        "max_in_flight": 2000,
+        "procs": 1,
+        "request_timeout_s": 10.0,
+        "lead_s": 5.0,
+        "draw_delay_s": 1.0,
+        "claim_phase_s": null,
+        "sim_client_ip": true,
+        "keepalive_s": 15.0
+      }
+    },
+    "auth_mode": {
+      "default": "dev_header",
+      "enum": [
+        "dev_header",
+        "jwt_sim_tokens"
+      ],
+      "title": "Auth Mode",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "title": "Scenario",
+  "type": "object"
+}

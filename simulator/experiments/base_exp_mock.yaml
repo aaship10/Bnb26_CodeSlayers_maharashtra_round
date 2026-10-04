@@ -1,0 +1,25 @@
+# Shared base for the E1-E8 experiment specs at MOCK scale (runs in minutes, not hours).
+# The full-scale versions (50k users, 500 seats, >=1000 bot identities, repeats >=10/30)
+# run against the REAL target in Stage 7; each spec's description notes the full numbers.
+name: exp_base
+description: Small lottery base; experiments override mode, defences, and the attacker.
+target: mock
+seed: 20261004
+repeats: 5
+event:
+  inventory: 50
+  window_seconds: 6
+  claim_ttl_seconds: 4
+  mode: LOTTERY
+  defences: {preset: none}
+legit:
+  count: 1000
+  arrival: {kind: spike_tail, spike_fraction: 0.6, spike_window_fraction: 0.08}
+  nat_groups: {fraction: 0.1, group_size: 50}
+  device: {pow_mode: real}
+  poll: {interval_s_mean: 1, max_polls: 8}
+  claim: {delay_lognormal_mu: -1.0, delay_lognormal_sigma: 0.4, no_show_rate: 0.03}
+attackers:
+  - {profile: sybil_single_ip, identities: 100, ips: 1, rps_per_identity: 1, solves_pow: true, hash_rate: 20000000}
+load: {max_in_flight: 400, procs: 1, lead_s: 2, claim_phase_s: 5}
+auth_mode: dev_header

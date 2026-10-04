@@ -1,0 +1,137 @@
+{
+  "chart_id": "bot_share_vs_request_multiplier",
+  "title": "Bot seat share vs request volume",
+  "x_label": "Bot request multiplier (x human rate)",
+  "y_label": "Bot seat share",
+  "x_scale": "log",
+  "y_scale": "linear",
+  "series": [
+    {
+      "name": "FCFS",
+      "points": [
+        {
+          "x": 1.0,
+          "y": 0.04779364092178904,
+          "ci_low": 0.0,
+          "ci_high": 0.14338092276536712,
+          "n": 10
+        },
+        {
+          "x": 10.0,
+          "y": 0.34659813294852304,
+          "ci_low": 0.21521938133775456,
+          "ci_high": 0.4736813987462137,
+          "n": 10
+        },
+        {
+          "x": 100.0,
+          "y": 0.8776370462506293,
+          "ci_low": 0.8668248756643653,
+          "ci_high": 0.8888886142135057,
+          "n": 10
+        },
+        {
+          "x": 1000.0,
+          "y": 0.986150113706738,
+          "ci_low": 0.9843366018410391,
+          "ci_high": 0.9883135244638278,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "Fair Drop, no defences",
+      "points": [
+        {
+          "x": 1.0,
+          "y": 0.017600000000000005,
+          "ci_low": 0.015600000000000003,
+          "ci_high": 0.0196,
+          "n": 10
+        },
+        {
+          "x": 10.0,
+          "y": 0.0184,
+          "ci_low": 0.016200000000000003,
+          "ci_high": 0.020599999999999997,
+          "n": 10
+        },
+        {
+          "x": 100.0,
+          "y": 0.0196,
+          "ci_low": 0.0172,
+          "ci_high": 0.022,
+          "n": 10
+        },
+        {
+          "x": 1000.0,
+          "y": 0.0222,
+          "ci_low": 0.0184,
+          "ci_high": 0.0262,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "Fair Drop, all defences",
+      "points": [
+        {
+          "x": 1.0,
+          "y": 0.011399999999999999,
+          "ci_low": 0.0092,
+          "ci_high": 0.013799999999999998,
+          "n": 10
+        },
+        {
+          "x": 10.0,
+          "y": 0.0102,
+          "ci_low": 0.0072,
+          "ci_high": 0.013600000000000001,
+          "n": 10
+        },
+        {
+          "x": 100.0,
+          "y": 0.010400000000000001,
+          "ci_low": 0.008400000000000001,
+          "ci_high": 0.0126,
+          "n": 10
+        },
+        {
+          "x": 1000.0,
+          "y": 0.008,
+          "ci_low": 0.0048000000000000004,
+          "ci_high": 0.0114,
+          "n": 10
+        }
+      ]
+    },
+    {
+      "name": "Lottery-neutral baseline (bot entrant share)",
+      "points": [
+        {
+          "x": 1.0,
+          "y": 0.0196078431372549
+        },
+        {
+          "x": 10.0,
+          "y": 0.0196078431372549
+        },
+        {
+          "x": 100.0,
+          "y": 0.0196078431372549
+        },
+        {
+          "x": 1000.0,
+          "y": 0.0196078431372549
+        }
+      ]
+    }
+  ],
+  "notes": "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite. 50k humans, 500 seats, 1,000 speed-bot identities, 10 runs per point.",
+  "target": "mock",
+  "synthetic": true,
+  "experiment_id": "E1",
+  "run_ids": [
+    "synthetic-E1"
+  ]
+}

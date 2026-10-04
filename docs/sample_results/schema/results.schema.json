@@ -1,0 +1,738 @@
+{
+  "$defs": {
+    "AttackerCostPerSeat": {
+      "additionalProperties": false,
+      "description": "null = not applicable or unbounded (bots won no seats); see METRICS.md.",
+      "properties": {
+        "requests": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requests"
+        },
+        "accounts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accounts"
+        },
+        "pow_hashes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pow Hashes"
+        },
+        "captcha_solves": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Captcha Solves"
+        },
+        "usd_modelled": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Usd Modelled"
+        }
+      },
+      "title": "AttackerCostPerSeat",
+      "type": "object"
+    },
+    "Detection": {
+      "additionalProperties": false,
+      "description": "null = not applicable (e.g. no defence layer ran).",
+      "properties": {
+        "precision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Precision"
+        },
+        "recall": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recall"
+        },
+        "false_positive_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "False Positive Rate"
+        },
+        "false_positive_rate_nat": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "FPR restricted to humans in NAT groups",
+          "title": "False Positive Rate Nat"
+        }
+      },
+      "title": "Detection",
+      "type": "object"
+    },
+    "ErrorRates": {
+      "additionalProperties": false,
+      "properties": {
+        "http_429_legit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Http 429 Legit"
+        },
+        "http_429_bot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Http 429 Bot"
+        },
+        "http_5xx": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Http 5Xx"
+        },
+        "timeout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Timeout"
+        }
+      },
+      "required": [
+        "http_429_legit",
+        "http_429_bot",
+        "http_5xx",
+        "timeout"
+      ],
+      "title": "ErrorRates",
+      "type": "object"
+    },
+    "EventSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "inventory": {
+          "title": "Inventory",
+          "type": "integer"
+        },
+        "mode": {
+          "enum": [
+            "LOTTERY",
+            "FCFS"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "defences": {
+          "additionalProperties": true,
+          "title": "Defences",
+          "type": "object"
+        }
+      },
+      "required": [
+        "inventory",
+        "mode",
+        "defences"
+      ],
+      "title": "EventSummary",
+      "type": "object"
+    },
+    "Fairness": {
+      "additionalProperties": false,
+      "properties": {
+        "bot_seat_share": {
+          "$ref": "#/$defs/Stat"
+        },
+        "bot_entrant_share": {
+          "$ref": "#/$defs/Stat"
+        },
+        "human_win_prob": {
+          "$ref": "#/$defs/Stat"
+        },
+        "human_entry_success_rate": {
+          "$ref": "#/$defs/Stat"
+        },
+        "arrival_time_correlation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null if there were no entrants"
+        },
+        "arrival_time_perm_p": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "permutation-test p-value, pooled",
+          "title": "Arrival Time Perm P"
+        },
+        "jain_index": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null if no identity won across runs (undefined)"
+        },
+        "gini": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null if no identity won across runs (undefined)"
+        },
+        "attacker_cost_per_seat": {
+          "$ref": "#/$defs/AttackerCostPerSeat",
+          "default": {
+            "requests": null,
+            "accounts": null,
+            "pow_hashes": null,
+            "captcha_solves": null,
+            "usd_modelled": null
+          }
+        }
+      },
+      "required": [
+        "bot_seat_share",
+        "bot_entrant_share",
+        "human_win_prob",
+        "human_entry_success_rate"
+      ],
+      "title": "Fairness",
+      "type": "object"
+    },
+    "Integrity": {
+      "additionalProperties": false,
+      "description": "Worst case across all runs. Any violation makes passed=false (the run is red).",
+      "properties": {
+        "oversold": {
+          "default": 0,
+          "title": "Oversold",
+          "type": "integer"
+        },
+        "duplicate_users": {
+          "default": 0,
+          "title": "Duplicate Users",
+          "type": "integer"
+        },
+        "duplicate_seats": {
+          "default": 0,
+          "title": "Duplicate Seats",
+          "type": "integer"
+        },
+        "orphaned_holds": {
+          "default": 0,
+          "title": "Orphaned Holds",
+          "type": "integer"
+        },
+        "draw_verified": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Draw Verified"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "passed"
+      ],
+      "title": "Integrity",
+      "type": "object"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "fairness": {
+          "$ref": "#/$defs/Fairness"
+        },
+        "system": {
+          "$ref": "#/$defs/SystemMetrics"
+        },
+        "detection": {
+          "$ref": "#/$defs/Detection",
+          "default": {
+            "precision": null,
+            "recall": null,
+            "false_positive_rate": null,
+            "false_positive_rate_nat": null
+          }
+        },
+        "integrity": {
+          "$ref": "#/$defs/Integrity"
+        }
+      },
+      "required": [
+        "fairness",
+        "system",
+        "integrity"
+      ],
+      "title": "Metrics",
+      "type": "object"
+    },
+    "PerRun": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "title": "Index",
+          "type": "integer"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "values": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Values",
+          "type": "object"
+        }
+      },
+      "required": [
+        "index",
+        "seed",
+        "status"
+      ],
+      "title": "PerRun",
+      "type": "object"
+    },
+    "Percentiles": {
+      "additionalProperties": false,
+      "description": "Pooled across all repeats (one HDR histogram). n = number of requests.\nPercentiles are null only when n = 0 (no request of that kind was sent).",
+      "properties": {
+        "p50": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P50"
+        },
+        "p95": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P95"
+        },
+        "p99": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P99"
+        },
+        "n": {
+          "default": 0,
+          "title": "N",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "p50",
+        "p95",
+        "p99"
+      ],
+      "title": "Percentiles",
+      "type": "object"
+    },
+    "Population": {
+      "additionalProperties": false,
+      "properties": {
+        "legit": {
+          "title": "Legit",
+          "type": "integer"
+        },
+        "bots": {
+          "description": "number of attacker instances (profiles x configs)",
+          "title": "Bots",
+          "type": "integer"
+        },
+        "bot_identities": {
+          "title": "Bot Identities",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "legit",
+        "bots",
+        "bot_identities"
+      ],
+      "title": "Population",
+      "type": "object"
+    },
+    "Stat": {
+      "additionalProperties": false,
+      "description": "A mean WITH its 95% CI and the number of independent observations behind it.\n\nA Stat always has a real interval. A value without one is emitted as a bare\nnumber (Value below), which D's UI labels \"single value, no CI reported\".\nThe fairness block is Stat-only: a fairness number is never a bare mean.",
+      "properties": {
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "ci_low": {
+          "title": "Ci Low",
+          "type": "number"
+        },
+        "ci_high": {
+          "title": "Ci High",
+          "type": "number"
+        },
+        "n": {
+          "minimum": 1,
+          "title": "N",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mean",
+        "ci_low",
+        "ci_high",
+        "n"
+      ],
+      "title": "Stat",
+      "type": "object"
+    },
+    "SystemMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "latency_ms": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Percentiles"
+          },
+          "description": "required keys: enter, status, claim; optional per-class keys such as enter.legit, enter.bot",
+          "title": "Latency Ms",
+          "type": "object"
+        },
+        "throughput_rps": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Throughput Rps"
+        },
+        "error_rates": {
+          "$ref": "#/$defs/ErrorRates"
+        },
+        "availability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stat"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "share of non-5xx, non-timeout responses during the spike",
+          "title": "Availability"
+        },
+        "scheduler_lag_ms": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Percentiles"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "load-generator wake-up lag (intended vs actual send). High => latencies include client-side delay, not just server time; a p99 > 50 ms is flagged in notes."
+        }
+      },
+      "required": [
+        "latency_ms",
+        "throughput_rps",
+        "error_rates"
+      ],
+      "title": "SystemMetrics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "target": {
+      "enum": [
+        "real",
+        "mock"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "seed": {
+      "title": "Seed",
+      "type": "integer"
+    },
+    "repeats": {
+      "title": "Repeats",
+      "type": "integer"
+    },
+    "failed_runs": {
+      "default": 0,
+      "title": "Failed Runs",
+      "type": "integer"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "population": {
+      "$ref": "#/$defs/Population"
+    },
+    "event": {
+      "$ref": "#/$defs/EventSummary"
+    },
+    "metrics": {
+      "$ref": "#/$defs/Metrics"
+    },
+    "per_run": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/PerRun"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Per Run"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    },
+    "scenario": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "the resolved Scenario, for reproducibility",
+      "title": "Scenario"
+    }
+  },
+  "required": [
+    "run_id",
+    "scenario_id",
+    "target",
+    "synthetic",
+    "seed",
+    "repeats",
+    "created_at",
+    "population",
+    "event",
+    "metrics"
+  ],
+  "title": "Results",
+  "type": "object"
+}

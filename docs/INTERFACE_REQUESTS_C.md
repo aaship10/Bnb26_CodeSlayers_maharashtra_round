@@ -1,0 +1,61 @@
+# Interface requests from Member C (simulator and evidence)
+
+What the simulator assumes about the other members' work. The simulator's own mock target (`simulator/mock_server/`) implements each assumption below, so you can run it to see the exact shape. Owners: please edit in place and mark items `DONE` or `CHANGED` with a date and the real shape. All schema guesses on my side live in `simulator/fairdrop_sim/adapters/`, so a change here touches one file.
+
+> **Deployment (2026-10-04):** A and B are not using Docker. The simulator targets the backend over `--base-url` (e.g. `http://127.0.0.1:8000`, or nginx `:8080` if B runs it) and adds no containers of its own.
+
+## Member A (core engine)
+
+| # | Request | Why / what the mock does meanwhile |
+|---|---------|------------------------------------|
+| A-C1 | `POST /admin/events/{id}/reset` wipes entries/allocations/audit and returns the event to SCHEDULED/OPEN with a **fresh** server seed. **RESOLVED 2026-10-04:** A generates the seed (commit-reveal); C does not choose it. Each repeat is an independent draw, which is what I want for confidence intervals. | Repeated runs for CIs; the draw is *verifiable* (not reproducible by C). |
+| A-C2 | Timing control via **manual admin overrides** `open`/`close`/`draw` (A confirms these exist "for demos"). I set generous `window_opens_at`/`window_closes_at` at create, then drive the exact window with overrides so runs have precise, repeatable timing. Please confirm the worker won't also auto-close/draw and race my overrides (or give a flag to disable auto-advance per event). | Precise open-loop timing per run. |
+| A-C3 | Draw outcome must depend only on (seed, set of (user, weight)), not on arrival order or timing. | The E8 timing-equivalence experiment tests exactly this. The mock uses weighted sampling without replacement keyed by HMAC(seed, event:user). |
+| A-C4 | `GET /admin/events/{id}/invariants` → `{passed: bool, checks: {oversold, duplicate_users, duplicate_seats, orphaned_holds, ...: int}, server_now}`. | The runner fails a run when `passed` is false and records `checks`. |
+| A-C5 | **CONFIRMED:** `python -m app.verify_draw <event_id>` exists (plus a pure public-input function). Please keep exit code 0 = verified, non-zero = not, and print JSON on stdout. The runner calls it after every lottery run; until integration I use the mock's `/__mock/events/{id}/verify`. | Integrity gate per run. |
+| A-C6 | **RESOLVED from A's schema:** I read `entries(user_id, public_id, arrival_seq, entered_at, weight, risk, state, draw_rank, waitlist_position)`, `allocations(entry_id, seat_id, status in HELD/CONFIRMED/EXPIRED/RELEASED, hold_expires_at, confirmed_at, ticket_code)`. "Draw winner" = `draw_rank between 1 and inventory`; "final seat" = allocation `CONFIRMED`. One confirm needed: is `entries.state` the live state (ENTERED/WON/WAITLISTED/CLAIMED/EXPIRED/LOST)? | Fairness metrics; db_adapter real query joins these three tables. |
+| A-C7 | A read-only Postgres role for C (or a DSN) with SELECT on `users`, `entries`, `allocations`, `events`, `defence.decisions`. | Analytics only, never writes. |
+| A-C8 | `POST /admin/events` body: `{id?, name, inventory, mode, window_seconds, claim_ttl_seconds, config?}`. Optional client-chosen `id` helps reproducibility. | The mock accepts exactly this. |
+| A-C9 | `FCFS` mode: entries in arrival order get holds immediately while seats remain; the rest queue and are promoted in arrival order when holds expire. `enter` returns `state: WON` or `WAITLISTED` in FCFS. | Baseline comparison. Tell me if your FCFS differs (for example "sold out", meaning no waitlist). |
+| A-C10 | Error HTTP statuses as in D's A5 (`WINDOW_*` 409, `NOT_WINNER` 403, `HOLD_EXPIRED` 410, `ALREADY_CLAIMED` 409). | My client keys on `code`, but the stats split by status. |
+
+## Member B (identity, defences, infra)
+
+| # | Request | Why / what the mock does meanwhile |
+|---|---------|------------------------------------|
+| B-C1 | `POST /admin/sim/tokens {user_ids[]}` → `{tokens: {user_id: jwt}}`, at least 5k ids per call. | Auth mode `jwt_sim_tokens` for 50k users. |
+| B-C2 | With `SIMULATION_MODE=true` and a valid `X-Sim-Key`: `X-Sim-Client-IP` replaces the client IP for **every** defence layer (rate limit, signals, risk). With an invalid key: 403 `FORBIDDEN`. | Distributed-botnet and NAT-group simulation from one machine. |
+| B-C3 | **CONFIRMED** `GET /admin/defence/decisions?event_id=&cursor=` (cursor paging). Fields: `{event_id, user_id, ts, action, weight, score, signals, layer, ip, device}`, `action ∈ {ALLOW, REJECT, CHALLENGE}` (a down-weight is ALLOW with weight<1). Never includes sim_label. | Detection precision/recall; my detector keys on entry weight<1 plus action=REJECT. |
+| B-C4 | `docs/POW_SPEC.md` vectors. My solver is already tested against D's vectors (`frontend/tools/ref_pow.py`). | Ensures all three implementations agree. |
+| B-C5 | **Need the MockCaptcha token format.** B's MockCaptcha accepts tokens **signed with SIM_KEY** (not a fixed string). Please document the exact signing (HMAC? over what message: user_id+event_id? encoding?) so C's CAPTCHA-solving model emits a valid token against the real stack. My own mock still uses the fixed `mock-captcha-ok`; the real token is isolated in `challenge/captcha.py`. Also: is a solved challenge single-use, and does it cover the user for the event? | Bot CAPTCHA cost model + the challenge retry loop. |
+| B-C6 | Chaos script CLI: `python infra/chaos/chaos_run.py --action <kill-backend|kill-redis|pg-failover|...> [--at-s N]`, exit code 0 on success. | E7 orchestrates it as a subprocess at t = X. |
+| B-C7 | nginx `/sim/` → `simulator:8100`. Please say whether the `/sim` prefix is stripped. My service answers on both `/sim/...` and `/...`, so either works. Also SSE settings for `/sim/runs/*/stream` (`proxy_buffering off`, long read timeout). | D's Vite dev proxy does **not** strip `/sim`. |
+| B-C8 | `GET /admin/defence/presets` → `[{id, layers: {name: {enabled, ...params}}}]`. | The runner records the fully expanded layers in every result. |
+| B-C9 | Rate limit 429s include `details.scope` (`ip`/`user`/`global`). | Splits false positives on NAT groups from per-user limits. |
+
+## Member D (frontend)
+
+| # | Note | Detail |
+|---|------|--------|
+| D-C1 | Sample data is ready: `docs/sample_results/` | 4 Results files (the demo presets), 6 chart datasets (all chart ids), `experiments.json`, and JSON Schemas in `schema/`. Everything is `synthetic: true` and `target: "mock"`. Regenerate with `fdsim samples`. |
+| D-C2 | Watermark rule | Show a visible "SYNTHETIC" badge when `synthetic` is true, and "MOCK DATA" when `target == "mock"`. Real final results have both off. |
+| D-C3 | Nullable fields | A `Stat` always has numeric `ci_low`/`ci_high` (matches your `statSchema`). Values without a CI are bare numbers, and only where you accept `Stat | number`. `null` = not applicable: detection with no defences, cost per seat when bots won 0 seats, `draw_verified` for FCFS. Chart points **omit** `ci_low`/`ci_high` when there is no interval (they are never `null`). |
+| D-C6 | Latency percentile with zero requests | **Request:** please accept `null` for `latency_ms.<endpoint>.p50/p95/p99` (it only happens when no request of that kind was sent, for example no claims because no winner claimed). Today your `pct` schema would reject the whole result. |
+| D-C7 | Extra keys you can use | Results: `failed_runs`, `per_run[]` (`{index, seed, status, error, values}`), `notes[]`, `arrival_time_perm_p`, `attacker_cost_per_seat.usd_modelled`, `detection.false_positive_rate_nat`, `system.availability`, `latency_ms["enter.legit"|"enter.bot"]`, each with `n`. Charts: `x_scale` (`linear`/`log`/`category`), `y_scale`, `experiment_id`, `run_ids`, and `n` per point. |
+| D-C10 | **Make three fairness fields nullable** | `arrival_time_correlation`, `jain_index` and `gini` are genuinely undefined in degenerate runs (no entrants, or no identity wins across runs). The engine emits `null` there. Your `resultsSchema` currently requires them as `statSchema`; please accept `statSchema.nullable()`. All realistic experiment results (and every sample file) still carry real Stats, so the demo is unaffected. |
+| D-C9 | **Demo script fix (decided 2026-10-04, option A)** | `DEMO_SCRIPT.md` §1 and `SLIDES_OUTLINE.md` say "200 bots take ~100% under FCFS". That can't happen: one seat per identity caps 200 bots at 200/500 = 40%. The FCFS demo preset and E1 will use **1,000 bot identities** (more than the 500 seats), so "near 100% under FCFS, about 2% under Fair Drop" is honest. Please change "200 bots" to "1,000 bots" in the script and slides. The bracketed numbers will come from the measured runs. |
+| D-C8 | Contract test | `simulator/tests/test_frontend_contract.py` runs **your** zod schemas (`features/sim/schemas.ts`) over every file I generate. If you tighten a schema, my CI tells me. |
+| D-C4 | Dev proxy | Run the simulator service (Stage 6) with `SIM_URL=http://127.0.0.1:8100 npm run dev`. Your default `/sim` target is your own mock on :8787. |
+| D-C5 | Extra fields | Results may gain new optional fields within `schema_version: 1`. Keep your zod schemas non-strict (strip unknown keys), which they already are. |
+
+## Answers to D's requests (from `INTERFACE_REQUESTS_D.md`, section "Member C")
+
+| D's # | Answer (2026-10-04) |
+|---|---|
+| C1 `GET /sim/runs` | **Accepted** with exactly your fields: `run_id, scenario_id, scenario_name, status, progress, params, repeats, seed, target, created_at, finished_at`, newest first. Stage 6. |
+| C2 run stream | **Accepted**: `id:` integer lines, `Last-Event-ID` replay, events `status` (= `GET /sim/runs/{id}`), `progress` `{status, progress, phase_text}`, and `snapshot` `{t_s, requests, throughput_rps, p95_ms, bot_seat_share}`, plus extra keys (`in_flight`, `errors`, `class`). Heartbeat comment every 15 s. Stage 6. |
+| C3 Stat vs number | See D-C3 above. Fairness = always Stat. `system.*`, `detection.*`, `attacker_cost_per_seat.*` = Stat or a bare number, or `null` where not applicable. |
+| C4 `target: "real"` unreachable | **Accepted**: `409 {code: "TARGET_UNAVAILABLE", message: "<sentence you can show>"}`. Running final experiments against the mock without `allow_mock` gets `409 {code: "MOCK_NOT_ALLOWED"}`. |
+| C5 chart x scale | **Done**: every dataset carries `x_scale` (`linear`, `log` or `category`). |
+| C6 `scale` | A string, e.g. `"2,000 logical users + 200 bots"`. |
+| C7 real files | They'll go into `docs/sample_results/` (with `synthetic: false, target: "real"`) after Stage 7's full runs. |

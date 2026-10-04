@@ -1,0 +1,18 @@
+id: E5
+title: "Ablation: bot seat share by defence configuration"
+description: Each preset under the same Sybil attack. Full-scale real target adds all 9 profiles mixed.
+chart_id: ablation_bot_share
+y_label: Bot seat share
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + 300 distributed bots, mock"
+x:
+  label: Defence configuration
+  param: event.defences.preset
+  values: [none, rate_limit, "rate_limit+pow", "rate_limit+pow+captcha", all]
+  scale: category
+series:
+  - name: Bot seat share
+    overrides: {attackers.0.profile: distributed_botnet, attackers.0.identities: 300, attackers.0.ips: 50}
+metric: fairness.bot_seat_share
+baseline: {name: Lottery-neutral baseline, metric: fairness.bot_entrant_share}

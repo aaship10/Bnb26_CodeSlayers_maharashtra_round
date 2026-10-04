@@ -1,0 +1,61 @@
+{
+  "additionalProperties": false,
+  "description": "GET /experiments item.",
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "charts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Charts",
+      "type": "array"
+    },
+    "run_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Run Ids",
+      "type": "array"
+    },
+    "target": {
+      "enum": [
+        "real",
+        "mock"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "charts",
+    "run_ids",
+    "target",
+    "synthetic",
+    "created_at"
+  ],
+  "title": "Experiment",
+  "type": "object"
+}

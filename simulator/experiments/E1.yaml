@@ -1,0 +1,41 @@
+id: E1
+title: Bot seat share vs request volume
+description: >
+  Does sending more requests buy more seats? FCFS vs Fair Drop. Full-scale (real target):
+  50k humans, 500 seats, 1,000 flooding bot identities, multipliers 1/10/100/1000, repeats >= 10.
+chart_id: bot_share_vs_request_multiplier
+y_label: Bot seat share
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + 150 flooding bots, mock"
+x:
+  label: Bot request multiplier (x base rate)
+  param: attackers.0.request_multiplier
+  values: [1, 10, 100]
+  scale: log
+series:
+  - name: FCFS
+    overrides:
+      event.mode: FCFS
+      attackers.0.profile: retry_spammer
+      attackers.0.identities: 150
+      attackers.0.ips: 150
+      attackers.0.rps_per_identity: 5
+  - name: Fair Drop, no defences
+    overrides:
+      event.mode: LOTTERY
+      event.defences.preset: none
+      attackers.0.profile: retry_spammer
+      attackers.0.identities: 150
+      attackers.0.ips: 150
+      attackers.0.rps_per_identity: 5
+  - name: Fair Drop, all defences
+    overrides:
+      event.mode: LOTTERY
+      event.defences.preset: all
+      attackers.0.profile: retry_spammer
+      attackers.0.identities: 150
+      attackers.0.ips: 150
+      attackers.0.rps_per_identity: 5
+metric: fairness.bot_seat_share
+baseline: {name: Lottery-neutral baseline (entrant share), metric: fairness.bot_entrant_share}

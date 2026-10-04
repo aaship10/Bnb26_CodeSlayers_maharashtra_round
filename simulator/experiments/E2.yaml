@@ -1,0 +1,24 @@
+id: E2
+title: Bot seat share vs number of bot identities (Sybil)
+description: >
+  Locates the Sybil boundary and shows defences bending the curve. Full-scale: 50k humans,
+  500 seats, identities 1/10/100/1000/5000 x presets, repeats >= 10.
+chart_id: bot_share_vs_identities
+y_label: Bot seat share
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + N distributed bots, mock"
+x:
+  label: Bot identities
+  param: attackers.0.identities
+  values: [10, 50, 100, 300]
+  scale: log
+series:
+  - name: none
+    overrides: {event.defences.preset: none, attackers.0.profile: distributed_botnet, attackers.0.ips: 50}
+  - name: rate_limit+pow
+    overrides: {event.defences.preset: rate_limit+pow, attackers.0.profile: distributed_botnet, attackers.0.ips: 50}
+  - name: all
+    overrides: {event.defences.preset: all, attackers.0.profile: distributed_botnet, attackers.0.ips: 50}
+metric: fairness.bot_seat_share
+baseline: {name: Lottery-neutral baseline, metric: fairness.bot_entrant_share}

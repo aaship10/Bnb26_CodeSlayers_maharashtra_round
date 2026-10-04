@@ -1,0 +1,18 @@
+id: E3
+title: Latency, normal vs attack load
+description: >
+  p50/p95/p99 per endpoint, normal vs attack. 'runs' kind: two cells (no attack, under attack).
+  The latency chart (percentile x-axis, endpoint-by-load series) is assembled in Stage 6 from
+  the stored Results' system.latency_ms. Full-scale: 50k humans on the real target.
+chart_id: latency_percentiles_normal_vs_attack
+y_label: Latency (ms, open-loop)
+kind: runs
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans (+bots under attack), mock"
+series:
+  - name: normal
+    overrides: {attackers: []}
+  - name: under attack
+    overrides: {attackers.0.profile: distributed_botnet, attackers.0.identities: 300, attackers.0.ips: 50}
+metric: fairness.bot_seat_share

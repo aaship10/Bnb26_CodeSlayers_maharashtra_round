@@ -1,0 +1,19 @@
+id: E6
+title: Human win probability under Sybil attack
+description: How gracefully humans' chances degrade as bot identities grow. Full-scale mirrors E2.
+chart_id: human_win_prob_under_attack
+y_label: Human win probability
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + N distributed bots, mock"
+x:
+  label: Bot identities
+  param: attackers.0.identities
+  values: [10, 50, 100, 300]
+  scale: log
+series:
+  - name: none
+    overrides: {event.defences.preset: none, attackers.0.profile: distributed_botnet, attackers.0.ips: 50}
+  - name: all
+    overrides: {event.defences.preset: all, attackers.0.profile: distributed_botnet, attackers.0.ips: 50}
+metric: fairness.human_win_prob

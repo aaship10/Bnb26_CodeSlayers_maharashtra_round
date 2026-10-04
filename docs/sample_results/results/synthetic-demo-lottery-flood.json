@@ -1,0 +1,542 @@
+{
+  "schema_version": 1,
+  "run_id": "synthetic-demo-lottery-flood",
+  "scenario_id": "demo-lottery-flood",
+  "target": "mock",
+  "synthetic": true,
+  "seed": 7,
+  "repeats": 30,
+  "failed_runs": 0,
+  "created_at": "2026-10-03T00:00:00Z",
+  "population": {
+    "legit": 2000,
+    "bots": 1,
+    "bot_identities": 20
+  },
+  "event": {
+    "inventory": 100,
+    "mode": "LOTTERY",
+    "defences": {
+      "preset": "none"
+    }
+  },
+  "metrics": {
+    "fairness": {
+      "bot_seat_share": {
+        "mean": 0.013000000000000001,
+        "ci_low": 0.009000000000000001,
+        "ci_high": 0.017000000000000005,
+        "n": 30
+      },
+      "bot_entrant_share": {
+        "mean": 0.009918347420420576,
+        "ci_low": 0.009915068890632579,
+        "ci_high": 0.009921624325849893,
+        "n": 30
+      },
+      "human_win_prob": {
+        "mean": 0.04935000000000001,
+        "ci_low": 0.04913333333333335,
+        "ci_high": 0.04955000000000001,
+        "n": 30
+      },
+      "human_entry_success_rate": {
+        "mean": 0.9982333333333334,
+        "ci_low": 0.9979166666666668,
+        "ci_high": 0.9985833333333333,
+        "n": 30
+      },
+      "arrival_time_correlation": {
+        "mean": 6.519933420806069e-06,
+        "ci_low": -0.007677479519944574,
+        "ci_high": 0.007518419884171849,
+        "n": 30
+      },
+      "arrival_time_perm_p": 0.47,
+      "jain_index": {
+        "mean": 0.61,
+        "ci_low": 0.58,
+        "ci_high": 0.64,
+        "n": 2000
+      },
+      "gini": {
+        "mean": 0.43,
+        "ci_low": 0.41,
+        "ci_high": 0.45,
+        "n": 2000
+      },
+      "attacker_cost_per_seat": {
+        "requests": {
+          "mean": 39094.73161006123,
+          "ci_low": 33509.9669464242,
+          "ci_high": 44517.98856297694,
+          "n": 30
+        },
+        "accounts": {
+          "mean": 15.555555555555559,
+          "ci_low": 13.222222222222225,
+          "ci_high": 17.666666666666668,
+          "n": 30
+        },
+        "pow_hashes": null,
+        "captcha_solves": null,
+        "usd_modelled": null
+      }
+    },
+    "system": {
+      "latency_ms": {
+        "enter": {
+          "p50": 14.0,
+          "p95": 86.0,
+          "p99": 212.0,
+          "n": 78000
+        },
+        "status": {
+          "p50": 6.0,
+          "p95": 31.0,
+          "p99": 77.0,
+          "n": 273000
+        },
+        "claim": {
+          "p50": 11.0,
+          "p95": 40.0,
+          "p99": 95.0,
+          "n": 3000
+        },
+        "enter.legit": {
+          "p50": 15.0,
+          "p95": 80.0,
+          "p99": 190.0,
+          "n": 75000
+        },
+        "enter.bot": {
+          "p50": 21.0,
+          "p95": 95.0,
+          "p99": 240.0,
+          "n": 3000
+        }
+      },
+      "throughput_rps": {
+        "mean": 1453.0854854196352,
+        "ci_low": 1439.9175288106835,
+        "ci_high": 1467.0397412317493,
+        "n": 30
+      },
+      "error_rates": {
+        "http_429_legit": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_429_bot": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_5xx": {
+          "mean": 0.00034733510784236795,
+          "ci_low": 0.0002827050099791013,
+          "ci_high": 0.0004116570327257674,
+          "n": 30
+        },
+        "timeout": {
+          "mean": 0.001104684869269956,
+          "ci_low": 0.0009397926551858415,
+          "ci_high": 0.0012591706160656668,
+          "n": 30
+        }
+      },
+      "availability": {
+        "mean": 0.9985479800228876,
+        "ci_low": 0.9983822241745206,
+        "ci_high": 0.9987145025115898,
+        "n": 30
+      },
+      "scheduler_lag_ms": null
+    },
+    "detection": {
+      "precision": null,
+      "recall": null,
+      "false_positive_rate": null,
+      "false_positive_rate_nat": null
+    },
+    "integrity": {
+      "oversold": 0,
+      "duplicate_users": 0,
+      "duplicate_seats": 0,
+      "orphaned_holds": 0,
+      "draw_verified": true,
+      "passed": true
+    }
+  },
+  "per_run": [
+    {
+      "index": 0,
+      "seed": 3818954571646896626,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.02,
+        "human_win_prob": 0.049,
+        "bot_seats": 2,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 1,
+      "seed": 8954967858928583091,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 2,
+      "seed": 4783285590890731073,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 3,
+      "seed": 658580124812714966,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 4,
+      "seed": 949190619445198269,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 5,
+      "seed": 2159115545914439875,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 6,
+      "seed": 4135119930286756214,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 7,
+      "seed": 6295864187802077116,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 8,
+      "seed": 417914052012447915,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 9,
+      "seed": 5751419739837804524,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 10,
+      "seed": 2804366430540993958,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 11,
+      "seed": 495819180037640444,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 12,
+      "seed": 2954811871504361711,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 13,
+      "seed": 9160675473773244297,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 14,
+      "seed": 2651198543223018126,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.02,
+        "human_win_prob": 0.049,
+        "bot_seats": 2,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 15,
+      "seed": 6725588120423967408,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 16,
+      "seed": 3595443279439359082,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 17,
+      "seed": 7665309771652621875,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 18,
+      "seed": 105523139122317501,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 19,
+      "seed": 7717129026064317243,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 20,
+      "seed": 286809333945734468,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.02,
+        "human_win_prob": 0.049,
+        "bot_seats": 2,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 21,
+      "seed": 4518040350924258973,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 22,
+      "seed": 4482425648607620230,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 23,
+      "seed": 7270997643090855289,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.02,
+        "human_win_prob": 0.049,
+        "bot_seats": 2,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 24,
+      "seed": 7697717756590470311,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 25,
+      "seed": 7527090127699404646,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 26,
+      "seed": 4536330046958029689,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.01,
+        "human_win_prob": 0.0495,
+        "bot_seats": 1,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 27,
+      "seed": 7113754283208715512,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.03,
+        "human_win_prob": 0.0485,
+        "bot_seats": 3,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 28,
+      "seed": 5654050683135395715,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 29,
+      "seed": 6324583209441500413,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.0,
+        "human_win_prob": 0.05,
+        "bot_seats": 0,
+        "integrity_passed": true
+      }
+    }
+  ],
+  "notes": [
+    "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "Fair Drop (lottery, no defences) under the same flood",
+    "attack profile: speed_bot"
+  ],
+  "scenario": null
+}

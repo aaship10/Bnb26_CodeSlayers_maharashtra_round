@@ -1,0 +1,542 @@
+{
+  "schema_version": 1,
+  "run_id": "synthetic-demo-sybil200-off",
+  "scenario_id": "demo-sybil200-off",
+  "target": "mock",
+  "synthetic": true,
+  "seed": 7,
+  "repeats": 30,
+  "failed_runs": 0,
+  "created_at": "2026-10-03T00:00:00Z",
+  "population": {
+    "legit": 2000,
+    "bots": 1,
+    "bot_identities": 200
+  },
+  "event": {
+    "inventory": 100,
+    "mode": "LOTTERY",
+    "defences": {
+      "preset": "none"
+    }
+  },
+  "metrics": {
+    "fairness": {
+      "bot_seat_share": {
+        "mean": 0.09866666666666667,
+        "ci_low": 0.08933333333333335,
+        "ci_high": 0.10733333333333332,
+        "n": 30
+      },
+      "bot_entrant_share": {
+        "mean": 0.0910969111818947,
+        "ci_low": 0.09106372840454462,
+        "ci_high": 0.0911356752527197,
+        "n": 30
+      },
+      "human_win_prob": {
+        "mean": 0.04506666666666668,
+        "ci_low": 0.04463333333333333,
+        "ci_high": 0.04551666666666668,
+        "n": 30
+      },
+      "human_entry_success_rate": {
+        "mean": 0.9977333333333332,
+        "ci_low": 0.9972995833333332,
+        "ci_high": 0.9981333333333334,
+        "n": 30
+      },
+      "arrival_time_correlation": {
+        "mean": -0.00270871971532612,
+        "ci_low": -0.009662944070432144,
+        "ci_high": 0.005203122457492224,
+        "n": 30
+      },
+      "arrival_time_perm_p": 0.47,
+      "jain_index": {
+        "mean": 0.61,
+        "ci_low": 0.58,
+        "ci_high": 0.64,
+        "n": 2000
+      },
+      "gini": {
+        "mean": 0.43,
+        "ci_low": 0.41,
+        "ci_high": 0.45,
+        "n": 2000
+      },
+      "attacker_cost_per_seat": {
+        "requests": {
+          "mean": 220.9941552368203,
+          "ci_low": 195.24139600439,
+          "ci_high": 253.40347368457606,
+          "n": 30
+        },
+        "accounts": {
+          "mean": 22.187812187812185,
+          "ci_low": 19.627306027306027,
+          "ci_high": 25.074215599215595,
+          "n": 30
+        },
+        "pow_hashes": null,
+        "captcha_solves": null,
+        "usd_modelled": null
+      }
+    },
+    "system": {
+      "latency_ms": {
+        "enter": {
+          "p50": 14.0,
+          "p95": 86.0,
+          "p99": 212.0,
+          "n": 78000
+        },
+        "status": {
+          "p50": 6.0,
+          "p95": 31.0,
+          "p99": 77.0,
+          "n": 273000
+        },
+        "claim": {
+          "p50": 11.0,
+          "p95": 40.0,
+          "p99": 95.0,
+          "n": 3000
+        },
+        "enter.legit": {
+          "p50": 15.0,
+          "p95": 80.0,
+          "p99": 190.0,
+          "n": 75000
+        },
+        "enter.bot": {
+          "p50": 21.0,
+          "p95": 95.0,
+          "p99": 240.0,
+          "n": 3000
+        }
+      },
+      "throughput_rps": {
+        "mean": 622.5890966627029,
+        "ci_low": 606.6418493671717,
+        "ci_high": 638.6029324410064,
+        "n": 30
+      },
+      "error_rates": {
+        "http_429_legit": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_429_bot": {
+          "mean": 0.0,
+          "ci_low": 0.0,
+          "ci_high": 0.0,
+          "n": 30
+        },
+        "http_5xx": {
+          "mean": 0.00038862619727604016,
+          "ci_low": 0.00032302170024015037,
+          "ci_high": 0.0004503124743544616,
+          "n": 30
+        },
+        "timeout": {
+          "mean": 0.0011818184677200069,
+          "ci_low": 0.001052560774431906,
+          "ci_high": 0.0013121681752698428,
+          "n": 30
+        }
+      },
+      "availability": {
+        "mean": 0.9984295553350038,
+        "ci_low": 0.9982677048644006,
+        "ci_high": 0.998579604043585,
+        "n": 30
+      },
+      "scheduler_lag_ms": null
+    },
+    "detection": {
+      "precision": null,
+      "recall": null,
+      "false_positive_rate": null,
+      "false_positive_rate_nat": null
+    },
+    "integrity": {
+      "oversold": 0,
+      "duplicate_users": 0,
+      "duplicate_seats": 0,
+      "orphaned_holds": 0,
+      "draw_verified": true,
+      "passed": true
+    }
+  },
+  "per_run": [
+    {
+      "index": 0,
+      "seed": 4713140804312430441,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 1,
+      "seed": 2352044599083084685,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 2,
+      "seed": 5228043701513285555,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.11,
+        "human_win_prob": 0.0445,
+        "bot_seats": 11,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 3,
+      "seed": 5020929969993287651,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 4,
+      "seed": 7432591229849072244,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 5,
+      "seed": 4922902373252529491,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 6,
+      "seed": 8356560028771967051,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.14,
+        "human_win_prob": 0.043,
+        "bot_seats": 14,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 7,
+      "seed": 6915292126988821103,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 8,
+      "seed": 1553871924309765152,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.14,
+        "human_win_prob": 0.043,
+        "bot_seats": 14,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 9,
+      "seed": 8412959449225994405,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.12,
+        "human_win_prob": 0.044,
+        "bot_seats": 12,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 10,
+      "seed": 686390893725574976,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 11,
+      "seed": 4530198189276275414,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.12,
+        "human_win_prob": 0.044,
+        "bot_seats": 12,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 12,
+      "seed": 7932246562728137095,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.09,
+        "human_win_prob": 0.0455,
+        "bot_seats": 9,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 13,
+      "seed": 1905052753181456183,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.13,
+        "human_win_prob": 0.0435,
+        "bot_seats": 13,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 14,
+      "seed": 4140261853130324742,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 15,
+      "seed": 8001002671652499523,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.11,
+        "human_win_prob": 0.0445,
+        "bot_seats": 11,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 16,
+      "seed": 5172633566701679850,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 17,
+      "seed": 2185751322346736887,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.05,
+        "human_win_prob": 0.0475,
+        "bot_seats": 5,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 18,
+      "seed": 7096533790837191899,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.06,
+        "human_win_prob": 0.047,
+        "bot_seats": 6,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 19,
+      "seed": 6478066378377132543,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.05,
+        "human_win_prob": 0.0475,
+        "bot_seats": 5,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 20,
+      "seed": 1183291330154740386,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.08,
+        "human_win_prob": 0.046,
+        "bot_seats": 8,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 21,
+      "seed": 3955737619318389629,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.11,
+        "human_win_prob": 0.0445,
+        "bot_seats": 11,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 22,
+      "seed": 5026270975094084274,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 23,
+      "seed": 4890491455807676606,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.08,
+        "human_win_prob": 0.046,
+        "bot_seats": 8,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 24,
+      "seed": 4207477628524119364,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.11,
+        "human_win_prob": 0.0445,
+        "bot_seats": 11,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 25,
+      "seed": 1521467165347265963,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.11,
+        "human_win_prob": 0.0445,
+        "bot_seats": 11,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 26,
+      "seed": 8103109012706168645,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.13,
+        "human_win_prob": 0.0435,
+        "bot_seats": 13,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 27,
+      "seed": 3538110346419035207,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.1,
+        "human_win_prob": 0.045,
+        "bot_seats": 10,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 28,
+      "seed": 3745781190440927666,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.13,
+        "human_win_prob": 0.0435,
+        "bot_seats": 13,
+        "integrity_passed": true
+      }
+    },
+    {
+      "index": 29,
+      "seed": 7170452512891400764,
+      "status": "ok",
+      "error": null,
+      "values": {
+        "bot_seat_share": 0.04,
+        "human_win_prob": 0.048,
+        "bot_seats": 4,
+        "integrity_passed": true
+      }
+    }
+  ],
+  "notes": [
+    "SYNTHETIC: fake numbers for UI development. Not a measurement. Do not cite.",
+    "Sybil, 200 identities, defences off",
+    "attack profile: sybil_single_ip"
+  ],
+  "scenario": null
+}

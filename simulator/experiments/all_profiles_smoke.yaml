@@ -1,0 +1,19 @@
+name: all_profiles_smoke
+description: One of every attack profile at small scale against the MOCK, to exercise all code paths.
+target: mock
+seed: 20261004
+repeats: 2
+event: {inventory: 50, window_seconds: 6, claim_ttl_seconds: 3, mode: LOTTERY, defences: {preset: rate_limit+pow, layers: {pow: {difficulty_bits: 8}, rate_limit: {per_ip_rps: 50, per_ip_burst: 100, per_user_rps: 20, per_user_burst: 40}}}}
+legit: {count: 500, device: {pow_mode: real}, poll: {interval_s_mean: 1, max_polls: 8}, claim: {delay_lognormal_mu: -1, delay_lognormal_sigma: 0.3, no_show_rate: 0.05}}
+attackers:
+  - {profile: naive_flooder, identities: 1, ips: 1, rps_per_identity: 200}
+  - {profile: speed_bot, identities: 5, ips: 5, rps_per_identity: 20, solves_pow: true, hash_rate: 10000000}
+  - {profile: retry_spammer, identities: 50, ips: 50, rps_per_identity: 5}
+  - {profile: sybil_single_ip, identities: 100, ips: 1, rps_per_identity: 1, solves_pow: true, hash_rate: 10000000}
+  - {profile: distributed_botnet, identities: 100, ips: 40, rps_per_identity: 1, solves_pow: true, hash_rate: 10000000}
+  - {profile: human_mimic, identities: 50, ips: 50, rps_per_identity: 1, solves_pow: true, solves_captcha: true, hash_rate: 10000000}
+  - {profile: late_flooder, identities: 10, ips: 10, rps_per_identity: 50}
+  - {profile: window_edge_bot, identities: 50, ips: 50, rps_per_identity: 2, solves_pow: true, hash_rate: 10000000}
+  - {profile: claim_sniper, identities: 50, ips: 50, rps_per_identity: 10, solves_pow: true, hash_rate: 10000000}
+load: {max_in_flight: 400, procs: 1, lead_s: 3, claim_phase_s: 6}
+auth_mode: dev_header

@@ -1,0 +1,20 @@
+id: E4
+title: Detection quality per defence layer
+description: >
+  Precision/recall/FPR of each layer vs ground truth. This spec sweeps the single-layer
+  preset and reads detection.precision; recall and FPR are in the same stored Results, and
+  the Stage-6 chart builder assembles the three-series chart from them.
+chart_id: detection_precision_recall_by_layer
+y_label: Rate
+base: base_exp_mock.yaml
+repeats: 5
+scale: "1,000 humans + 300 bots, mock"
+x:
+  label: Defence configuration
+  param: event.defences.preset
+  values: [rate_limit, "rate_limit+pow", all]
+  scale: category
+series:
+  - name: precision
+    overrides: {attackers.0.profile: distributed_botnet, attackers.0.identities: 300, attackers.0.ips: 50}
+metric: detection.precision
