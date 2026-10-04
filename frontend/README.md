@@ -23,7 +23,7 @@ Open **http://localhost:5173** (use `localhost`; on Windows Vite binds IPv6 `::1
 | Browser path | Goes to |
 |---|---|
 | `/api/*` | backend, prefix stripped (the mock for now; override with `API_URL`) |
-| `/sim/*` | simulator service (override with `SIM_URL`) |
+| `/sim/*` | simulator service on :8100, started by `npm run dev:sim` / `npm run dev` at the root (override with `SIM_URL`; the mock on :8787 also serves `/sim` for `dev:all`, via `SIM_URL=http://127.0.0.1:8787`) |
 | `/__mock/*` | mock control endpoints (dev only) |
 
 In dev a floating **Mock** button opens the control panel:

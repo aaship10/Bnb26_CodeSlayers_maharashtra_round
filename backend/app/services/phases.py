@@ -27,6 +27,7 @@ from app.errors import ApiError, ErrorCode
 from app.schemas import EventCreate, EventPatch
 from app.services import audit
 from app.services.beacon import get_beacon
+from app import hooks
 from app.services.events import EventInfo, load_event
 
 
@@ -44,6 +45,7 @@ async def _reload(conn: AsyncConnection, event_id: UUID) -> tuple[EventInfo, dat
 
 
 async def create_event(conn: AsyncConnection, body: EventCreate) -> tuple[EventInfo, datetime]:
+    hooks.validate_event_config(body.config)
     event_id = (await conn.execute(text("""
         INSERT INTO events (name, inventory, mode, window_opens_at, window_closes_at,
                             claim_ttl_seconds, claim_phase_seconds, config)
@@ -188,6 +190,7 @@ async def patch_event(conn: AsyncConnection, event_id: UUID, body: EventPatch) -
             sets.append(f"{col} = :{col}")
             params[col] = fields[col]
     if "config" in fields:
+        hooks.validate_event_config(fields["config"])
         sets.append("config = CAST(:config AS jsonb)")
         params["config"] = json.dumps(fields["config"])
     await conn.execute(text(f"UPDATE events SET {', '.join(sets)}, updated_at = now() WHERE id = :id"), params)

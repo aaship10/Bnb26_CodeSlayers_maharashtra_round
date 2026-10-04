@@ -126,7 +126,7 @@ async def test_patch_config(api):
     await api.post(f"/admin/events/{ev['id']}/schedule", headers=ADMIN)
     # config may change in any phase; mode/timings only while DRAFT.
     r = await api.patch(f"/admin/events/{ev['id']}/config", headers=ADMIN, json={"config": {"pow": {"bits": 18}}})
-    assert r.status_code == 200 and r.json()["config"] == {"pow": {"bits": 18}}
+    assert r.status_code == 200 and r.json()["config"]["pow"] == {"bits": 18}
     r = await api.patch(f"/admin/events/{ev['id']}/config", headers=ADMIN, json={"mode": "FCFS"})
     assert r.status_code == 409 and r.json()["code"] == "INVALID_PHASE"
     r = await api.patch(f"/admin/events/{ev['id']}/config", headers=ADMIN, json={"bogus": 1})

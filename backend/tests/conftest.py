@@ -8,6 +8,9 @@ proves the migration is reversible. Every test starts from empty tables.
 from __future__ import annotations
 
 import os
+
+# Core tests must not depend on Member B's plugin (Redis, extra migrations) even if backend/.env enables it.
+os.environ["PLUGINS"] = ""
 import uuid
 from collections.abc import AsyncIterator, Iterator
 from datetime import datetime, timedelta, timezone

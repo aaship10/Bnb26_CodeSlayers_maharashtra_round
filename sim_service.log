@@ -1,0 +1,4 @@
+
+> fair-drop-frontend@0.1.0 dev:sim
+> cd ../simulator && .venv\Scripts\fdsim serve --port 8100
+

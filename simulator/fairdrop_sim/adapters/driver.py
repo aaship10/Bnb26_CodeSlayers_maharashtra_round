@@ -89,6 +89,15 @@ class Driver:
 # =============================================================================== mock
 
 
+def _real_defences(defences: dict[str, Any]) -> dict[str, Any]:
+    """B's schema is strict: a named preset may not carry layer overrides (they would make the experiment
+    label lie), and its parameter names are B's own. Layer overrides in a scenario use the mock's toy
+    parameter names, so for the real target a named preset is sent by name only and B expands it."""
+    if defences.get("preset", "none") != "custom":
+        return {"preset": defences.get("preset", "none")}
+    return defences
+
+
 class MockDriver(Driver):
     kind = "mock"
 
@@ -179,7 +188,7 @@ class AEngineDriver(Driver):
             "window_opens_at": _iso(now + timedelta(hours=lo)), "window_closes_at": _iso(now + timedelta(hours=hi)),
             "claim_ttl_seconds": max(1, math.ceil(ev.claim_ttl_seconds)),
             "claim_phase_seconds": max(1, math.ceil(sc.load.claim_phase_s or 3 * ev.claim_ttl_seconds)),
-            "config": {"defences": ev.defences.model_dump(exclude_none=True)},
+            "config": {"defences": _real_defences(ev.defences.model_dump(exclude_none=True))},
         }
         created = await self.admin.call("create event", "POST", "/admin/events", json=body)
         self.event_id = created["id"]

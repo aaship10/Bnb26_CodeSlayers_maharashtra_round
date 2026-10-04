@@ -193,17 +193,11 @@ class EventAdmin(EventPublic):
     def build(cls, ev: EventInfo, now: datetime) -> EventAdmin:  # type: ignore[override]
         base = EventPublic.build(ev, now).model_dump()
         config = dict(ev.config or {})
-        if "defences" not in config:
-            config["defences"] = {
-                "preset": "rate_limit+pow",
-                "layers": {
-                    "rate_limit": {"enabled": True, "per_ip_rps": 5, "per_user_rps": 2, "burst": 10},
-                    "pow": {"enabled": True, "difficulty_bits": 18},
-                    "captcha": {"enabled": False, "provider": "mock", "when_risk_at_least": 0.7},
-                    "signals": {"enabled": False, "device_id": True, "honeypot": True, "timing": True},
-                    "risk": {"enabled": False, "challenge_at": 0.5, "reject_at": 0.9},
-                },
-            }
+        # Show what the gate will actually enforce (B's expanded config), never an invented default.
+        from app import hooks
+        effective = hooks.effective_defences(config)
+        if effective is not None:
+            config["defences"] = effective
         return cls(
             **base, claim_phase_seconds=ev.claim_phase_seconds,
             beacon_randomness=ev.beacon_randomness, entrants_hash=ev.entrants_hash,

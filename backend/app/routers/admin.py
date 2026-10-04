@@ -110,6 +110,9 @@ DEFENCE_PRESETS = [
 @router.get("/defence/presets")
 async def get_defence_presets() -> list[dict[str, Any]]:
     """Return available defence presets for event creation & config."""
+    from app import hooks
+    if (provided := hooks.defence_presets()) is not None:
+        return provided
     return DEFENCE_PRESETS
 
 

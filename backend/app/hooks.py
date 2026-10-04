@@ -94,3 +94,64 @@ async def entry_gate(ctx: GateContext) -> GateDecision:
     if not isinstance(decision, GateDecision):
         raise TypeError(f"entry gate returned {type(decision).__name__}, expected GateDecision")
     return decision
+
+
+# --- rate limiting (Member B) -------------------------------------------------------------
+# Routes declare `Depends(rate_limit("enter"))` at import time, before any plugin has run, so the
+# dependency looks the real limiter up per request. Without a plugin it is a no-op.
+_rate_limit_factory = None
+
+
+def register_rate_limit(factory) -> None:
+    global _rate_limit_factory
+    _rate_limit_factory = factory
+
+
+def rate_limit(endpoint: str):
+    cache: dict = {}
+
+    async def dependency(request: Request) -> None:
+        if _rate_limit_factory is None:
+            return
+        dep = cache.get("dep") or cache.setdefault("dep", _rate_limit_factory(endpoint))
+        await dep(request)
+
+    return dependency
+
+
+# --- defence config (Member B) ------------------------------------------------------------
+# events.config.defences is B's schema. Without a plugin nothing is validated or expanded.
+_config_validator = None   # (defences_blob) -> normalised dict; raises ValueError(errors) when invalid
+_presets_provider = None   # () -> list[dict]
+
+
+def register_config_hooks(validator, presets) -> None:
+    global _config_validator, _presets_provider
+    _config_validator, _presets_provider = validator, presets
+
+
+def validate_event_config(config: dict[str, Any] | None) -> None:
+    """Called when an admin creates an event or patches its config. Raises VALIDATION_ERROR."""
+    if _config_validator is None or not config or "defences" not in config:
+        return
+    from app.errors import ApiError, ErrorCode
+    try:
+        _config_validator(config["defences"])
+    except ValueError as exc:
+        raise ApiError(ErrorCode.VALIDATION_ERROR, "invalid defences config",
+                       details={"errors": exc.args[0] if exc.args else str(exc)}) from None
+
+
+def effective_defences(config: dict[str, Any] | None) -> dict[str, Any] | None:
+    """The defences the gate will actually enforce, or None when no defence plugin is installed."""
+    if _config_validator is None:
+        return None
+    try:
+        return _config_validator((config or {}).get("defences"))
+    except ValueError:
+        # Stored before validation existed (or by an older client): show it as stored, never fail a listing.
+        return (config or {}).get("defences")
+
+
+def defence_presets() -> list[dict[str, Any]] | None:
+    return _presets_provider() if _presets_provider else None

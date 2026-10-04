@@ -1,0 +1,28 @@
+# Stage 3 development check: lottery, small crowd, three attacker profiles, REAL target (A's backend + B's defences).
+name: attack_small_real
+description: FCFS-style flood + single-IP Sybil + distributed botnet against a 100-seat lottery.
+target: real
+seed: 20261004
+repeats: 2
+event:
+  inventory: 100
+  window_seconds: 60
+  claim_ttl_seconds: 20
+  mode: LOTTERY
+  defences: {preset: all}
+legit:
+  count: 150
+  arrival: {kind: spike_tail, spike_fraction: 0.6, spike_window_fraction: 0.05}
+  nat_groups: {fraction: 0.1, group_size: 50}
+  poll: {interval_s_mean: 2, max_polls: 10}
+  claim: {delay_lognormal_mu: 0.0, delay_lognormal_sigma: 0.5, no_show_rate: 0.05}
+attackers:
+  - {profile: speed_bot, identities: 1, ips: 1, rps_per_identity: 50}
+  - {profile: sybil_single_ip, identities: 30, ips: 1, rps_per_identity: 2}
+  - {profile: distributed_botnet, identities: 30, ips: 100, rps_per_identity: 2}
+load:
+  max_in_flight: 200
+  procs: 2
+  request_timeout_s: 20
+  lead_s: 3
+auth_mode: dev_header

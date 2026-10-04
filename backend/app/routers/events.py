@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.auth import CurrentUser, get_current_user
 from app.db import get_conn, transaction
+from app.hooks import rate_limit
 from app.errors import ApiError, ErrorCode
 from app.idempotency import run_idempotent
 from app.routers import ERRORS
@@ -34,7 +35,7 @@ async def get_event(event_id: UUID, conn: AsyncConnection = Depends(get_conn)) -
     return EventPublic.build(*found)
 
 
-@router.post("/{event_id}/enter", response_model=EnterResponse)
+@router.post("/{event_id}/enter", response_model=EnterResponse, dependencies=[Depends(rate_limit("enter"))])
 async def enter_event(event_id: UUID, request: Request,
                       user: CurrentUser = Depends(get_current_user),
                       conn: AsyncConnection = Depends(get_conn)) -> EnterResponse:
@@ -46,14 +47,15 @@ async def enter_event(event_id: UUID, request: Request,
     return await entry_service.enter(conn, request, user, event_id)
 
 
-@router.get("/{event_id}/status", response_model=StatusResponse, response_model_exclude_none=True)
+@router.get("/{event_id}/status", response_model=StatusResponse, response_model_exclude_none=True,
+            dependencies=[Depends(rate_limit("status"))])
 async def get_status(event_id: UUID, user: CurrentUser = Depends(get_current_user),
                      conn: AsyncConnection = Depends(get_conn)) -> StatusResponse:
     """Your current state. Pure read; poll it after refresh/reconnect."""
     return await status_service.get_status(conn, user.id, event_id)
 
 
-@router.post("/{event_id}/claim", response_model=ClaimResponse)
+@router.post("/{event_id}/claim", response_model=ClaimResponse, dependencies=[Depends(rate_limit("claim"))])
 async def claim_seat(event_id: UUID, user: CurrentUser = Depends(get_current_user),
                      conn: AsyncConnection = Depends(get_conn),
                      idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):

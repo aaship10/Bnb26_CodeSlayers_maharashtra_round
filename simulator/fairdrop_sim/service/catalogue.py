@@ -17,6 +17,8 @@ bots' share of entrants.
 """
 from __future__ import annotations
 
+import os
+
 
 from typing import Any
 
@@ -175,6 +177,15 @@ def build_scenario(scenario_id: str, params: dict[str, Any], *, seed: int, repea
     preset = p.get("defence_preset", "none" if scenario_id == "flash_crowd" else "rate_limit+pow")
     legit = int(p["legit_users"])
     attackers: list[dict[str, Any]] = []
+    # The real target is slower than the in-memory mock (a hosted Postgres adds round trips to every
+    # request), so its window is configurable: SIM_REAL_WINDOW_S (default 6, the mock's demo window).
+    real = target == "real"
+    window_s = float(os.environ.get("SIM_REAL_WINDOW_S", "6")) if real else 6.0
+    # Named presets are expanded by the real target itself (its parameter names differ from the mock's).
+    defence_layers = None if real else {
+        "pow": {"difficulty_bits": DEMO_POW_BITS},
+        "rate_limit": {"per_ip_rps": 50, "per_ip_burst": 100, "per_user_rps": 20, "per_user_burst": 40},
+    }
 
     if scenario_id == "bot_swarm" and int(p["bots"]) > 0:
         n = int(p["bots"])
@@ -198,11 +209,8 @@ def build_scenario(scenario_id: str, params: dict[str, Any], *, seed: int, repea
         "seed": seed,
         "repeats": max(2, repeats),  # the Scenario model wants >= 2; the service enforces its own repeats
         "event": {
-            "inventory": int(p["inventory"]), "window_seconds": 6, "claim_ttl_seconds": 4, "mode": mode,
-            "defences": {"preset": preset, "layers": {
-                "pow": {"difficulty_bits": DEMO_POW_BITS},
-                "rate_limit": {"per_ip_rps": 50, "per_ip_burst": 100, "per_user_rps": 20, "per_user_burst": 40},
-            }},
+            "inventory": int(p["inventory"]), "window_seconds": window_s, "claim_ttl_seconds": 4, "mode": mode,
+            "defences": {"preset": preset, **({"layers": defence_layers} if defence_layers else {})},
         },
         "legit": {
             "count": legit,
