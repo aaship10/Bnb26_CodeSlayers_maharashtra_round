@@ -10,8 +10,13 @@
  */
 import { z } from 'zod';
 
-/** ISO-8601 UTC with a trailing Z (the agreed wire format). */
-export const isoUtc = z.string().datetime();
+/** ISO-8601 UTC string (accepts trailing Z or +00:00 offset). */
+export const isoUtc = z
+  .string()
+  .datetime({ offset: true })
+  .refine((val) => val.endsWith('Z') || val.endsWith('+00:00') || val.endsWith('-00:00'), {
+    message: 'Must be a UTC timestamp (ending in Z or +00:00)',
+  });
 
 export const PHASES = ['DRAFT', 'SCHEDULED', 'OPEN', 'DRAWING', 'CLAIMING', 'CLOSED'] as const;
 export const phaseSchema = z.enum(PHASES);
@@ -96,7 +101,10 @@ export const eventSchema = z.object({
 });
 export type EventInfo = z.infer<typeof eventSchema>;
 
-export const eventListSchema = z.array(eventSchema);
+export const eventListSchema = z.preprocess(
+  (val) => (val && typeof val === 'object' && 'events' in val && Array.isArray((val as { events: unknown }).events) ? (val as { events: unknown }).events : val),
+  z.array(eventSchema),
+) as z.ZodType<EventInfo[]>;
 
 export const enterResponseSchema = z.object({
   state: userStateSchema,

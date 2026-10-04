@@ -1,14 +1,17 @@
 """Attendee endpoints."""
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Header, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.auth import CurrentUser, get_current_user
-from app.db import get_conn
+from app.db import get_conn, transaction
 from app.errors import ApiError, ErrorCode
+from app.idempotency import run_idempotent
 from app.routers import ERRORS
-from app.schemas import EnterResponse, EventList, EventPublic, StatusResponse
+from app.schemas import ClaimResponse, EnterResponse, EventList, EventPublic, StatusResponse
+from app.services import claims as claims_service
 from app.services import entry as entry_service
 from app.services import status as status_service
 from app.services.events import list_events, load_event
@@ -48,3 +51,24 @@ async def get_status(event_id: UUID, user: CurrentUser = Depends(get_current_use
                      conn: AsyncConnection = Depends(get_conn)) -> StatusResponse:
     """Your current state. Pure read; poll it after refresh/reconnect."""
     return await status_service.get_status(conn, user.id, event_id)
+
+
+@router.post("/{event_id}/claim", response_model=ClaimResponse)
+async def claim_seat(event_id: UUID, user: CurrentUser = Depends(get_current_user),
+                     conn: AsyncConnection = Depends(get_conn),
+                     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key")):
+    """Confirm the seat held for you. Send an Idempotency-Key and reuse it on retries:
+    a repeat with the same key returns the original response (header
+    `Idempotent-Replayed: true`) and never issues a second ticket.
+
+    Errors: NOT_WINNER (403), HOLD_EXPIRED (410), ALREADY_CLAIMED (409), INVALID_PHASE (409)."""
+    async def op():
+        out = await claims_service.claim(conn, user.id, event_id)
+        return 200, out.model_dump(mode="json")
+
+    async with transaction(conn):
+        status, body, replayed = await run_idempotent(
+            conn, key=idempotency_key, principal=user.id, endpoint=f"POST /events/{event_id}/claim",
+            payload={}, op=op)
+    return JSONResponse(status_code=status, content=body,
+                        headers={"Idempotent-Replayed": "true"} if replayed else None)

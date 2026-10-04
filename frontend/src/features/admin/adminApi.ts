@@ -8,6 +8,7 @@ import {
   invariantsSchema,
   presetListSchema,
   statsSchema,
+  transitionResponseSchema,
   type CreateEventBody,
   type DefenceConfig,
   type LifecycleAction,
@@ -49,12 +50,12 @@ export const adminApi = {
   create: (body: CreateEventBody, idempotencyKey: string) =>
     call('/admin/events', adminEventSchema, { method: 'POST', body, idempotencyKey }),
   transition: (id: string, action: LifecycleAction, idempotencyKey: string) =>
-    call(`/admin/events/${enc(id)}/${action}`, adminEventSchema, { method: 'POST', idempotencyKey }),
+    call(`/admin/events/${enc(id)}/${action}`, transitionResponseSchema, { method: 'POST', idempotencyKey }),
   patchConfig: (id: string, defences: DefenceConfig, idempotencyKey: string) =>
     call(`/admin/events/${enc(id)}/config`, adminEventSchema, { method: 'PATCH', body: { defences }, idempotencyKey }),
   stats: (id: string, signal?: AbortSignal) => call(`/admin/events/${enc(id)}/stats`, statsSchema, { signal }),
   invariants: (id: string, signal?: AbortSignal) => call(`/admin/events/${enc(id)}/invariants`, invariantsSchema, { signal }),
-  reset: (id: string, idempotencyKey: string) => call(`/admin/events/${enc(id)}/reset`, adminEventSchema, { method: 'POST', idempotencyKey }),
+  reset: (id: string, idempotencyKey: string) => call(`/admin/events/${enc(id)}/reset`, transitionResponseSchema, { method: 'POST', idempotencyKey }),
 };
 
 export const adminKeys = {

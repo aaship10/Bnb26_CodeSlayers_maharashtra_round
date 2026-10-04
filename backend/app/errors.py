@@ -26,6 +26,8 @@ class ErrorCode(StrEnum):
     NOT_WINNER = "NOT_WINNER"
     HOLD_EXPIRED = "HOLD_EXPIRED"
     ALREADY_CLAIMED = "ALREADY_CLAIMED"
+    # draw
+    BEACON_PENDING = "BEACON_PENDING"
     # defence layer (Member B)
     RATE_LIMITED = "RATE_LIMITED"
     CHALLENGE_REQUIRED = "CHALLENGE_REQUIRED"
@@ -43,9 +45,10 @@ class ErrorCode(StrEnum):
 DEFAULT_STATUS: dict[ErrorCode, int] = {
     ErrorCode.WINDOW_NOT_OPEN: 409,
     ErrorCode.WINDOW_CLOSED: 409,
-    ErrorCode.NOT_WINNER: 409,
-    ErrorCode.HOLD_EXPIRED: 409,
+    ErrorCode.NOT_WINNER: 403,      # statuses per docs/INTERFACE_REQUESTS_D.md A5 (the UI keys on `code`)
+    ErrorCode.HOLD_EXPIRED: 410,
     ErrorCode.ALREADY_CLAIMED: 409,
+    ErrorCode.BEACON_PENDING: 409,
     ErrorCode.RATE_LIMITED: 429,
     ErrorCode.CHALLENGE_REQUIRED: 403,
     ErrorCode.REJECTED: 403,

@@ -4,8 +4,24 @@ Time-window lottery with a provably fair draw and a claim phase. Integrity is
 enforced by Postgres (constraints, partial unique indexes, guard triggers,
 locks); the API and worker are stateless and safe to run as many replicas.
 
-Status: **stage 2**: schema, admin lifecycle (create/schedule/open/close/patch), dev auth,
-idempotent `/enter`, `/status`, `entry_gate` hook, plugin loading.
+Status: **stage 4** (LOTTERY mode complete; FCFS is stage 5): schema, admin lifecycle (create/schedule/open/close/patch), dev auth,
+idempotent `/enter`, `/status`, `entry_gate` hook, plugin loading, and the provably fair
+draw (`POST /admin/events/{id}/draw`, public `GET /events/{id}/fairness[/entrants|/results]`).
+
+The draw follows `docs/DRAW_SPEC_PROVISIONAL.md` (the frontend verifier's encoding; its test
+vectors are replayed in `tests/unit/test_draw_algo.py`). Order of operations: close window,
+then fetch the committed beacon round, then draw. Winners get a HELD seat (rank k = seat k)
+and the event moves to CLAIMING.
+
+Stage 4: `POST /events/{id}/claim` (Idempotency-Key; NOT_WINNER 403, HOLD_EXPIRED 410,
+ALREADY_CLAIMED 409), hold expiry, waitlist promotion in `waitlist_position` order (a promoted
+entrant gets a full `claim_ttl_seconds`; no promotion if it would not fit before the claim phase
+ends), claim-phase end (event CLOSED, leftover waitlist LOST), and real
+`GET /admin/events/{id}/stats` / `/invariants`. The time-driven parts live in `app/worker.py`:
+
+```powershell
+.venv\Scripts\python -m app.worker          # any number of copies is safe; or RUN_WORKER=true inside the API
+```
 
 ## Quick start (hosted Postgres, e.g. Neon)
 

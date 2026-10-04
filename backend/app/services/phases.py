@@ -120,10 +120,22 @@ async def open_event(conn: AsyncConnection, event_id: UUID) -> tuple[EventInfo, 
     return ev, now, True
 
 
-async def close_event_window(conn: AsyncConnection, event_id: UUID) -> tuple[EventInfo, datetime, bool]:
+async def auto_open(conn: AsyncConnection, event_id: UUID) -> bool:
+    """Worker: SCHEDULED -> OPEN once the scheduled opening time has arrived."""
+    ev, now = await _locked(conn, event_id)
+    if ev.phase != "SCHEDULED" or not ev.window_opens_at <= now < ev.window_closes_at:
+        return False
+    await conn.execute(text("UPDATE events SET phase = 'OPEN', updated_at = now() "
+                            "WHERE id = :id AND phase = 'SCHEDULED'"), {"id": event_id})
+    await audit.record(conn, event_id, "window_opened", {"manual": False})
+    return True
+
+
+async def close_event_window(conn: AsyncConnection, event_id: UUID, *,
+                             manual: bool = True) -> tuple[EventInfo, datetime, bool]:
     """Close the entry window now (manual override).
 
-    LOTTERY: SCHEDULED|OPEN -> DRAWING (the draw then runs, stage 3).
+    LOTTERY: SCHEDULED|OPEN -> DRAWING (services/draw.py then runs the draw).
     FCFS:    SCHEDULED|OPEN -> CLOSED.
     window_closes_at := min(closes_at, now). The beacon round committed at
     scheduling is NOT changed, so an early close may have to wait for that round.
@@ -149,7 +161,7 @@ async def close_event_window(conn: AsyncConnection, event_id: UUID) -> tuple[Eve
                updated_at = now()
          WHERE id = :id AND phase IN ('SCHEDULED', 'OPEN')
     """), {"id": event_id, "target": target})
-    await audit.record(conn, event_id, "window_closed", {"manual": True})
+    await audit.record(conn, event_id, "window_closed", {"manual": manual})
     ev, now = await _reload(conn, event_id)
     return ev, now, True
 

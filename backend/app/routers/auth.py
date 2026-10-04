@@ -1,6 +1,10 @@
 """Auth router: email verification (OTP registration & verification), me, refresh, and dev-login."""
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from email.message import EmailMessage
 import os
 import random

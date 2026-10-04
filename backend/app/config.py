@@ -30,6 +30,12 @@ class Settings(BaseSettings):
 
     beacon_provider: Literal["mock", "drand"] = "mock"
 
+    # Background worker (auto open/close/draw, hold expiry, waitlist promotion).
+    # Run it as its own process (`python -m app.worker`, any number of copies are
+    # safe) or, for single-process demos, inside the API with RUN_WORKER=true.
+    run_worker: bool = False
+    worker_interval_seconds: float = 1.0
+
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""

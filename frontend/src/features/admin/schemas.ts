@@ -43,6 +43,12 @@ export const adminEventSchema = eventSchema.extend({
 export type AdminEvent = z.infer<typeof adminEventSchema>;
 export const adminEventListSchema = z.array(adminEventSchema);
 
+export const transitionResponseSchema = z.union([
+  adminEventSchema,
+  z.object({ event: adminEventSchema, changed: z.boolean().optional() }).transform((v) => v.event),
+]);
+
+
 const count = z.number().int().nonnegative();
 
 export const statsSchema = z.object({
