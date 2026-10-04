@@ -43,6 +43,30 @@ class DevLoginResponse(BaseModel):
     user_id: UUID
 
 
+class RegisterRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    display_name: str = Field(default="", max_length=100)
+    hp: str = Field(default="")
+
+
+class VerifyRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    otp: str = Field(min_length=1, max_length=20)
+
+
+class SessionResponse(BaseModel):
+    token: str
+    expires_at: UtcDatetime
+    user_id: UUID
+
+
+class UserMeResponse(BaseModel):
+    user_id: UUID
+    email: str
+    display_name: str
+    is_admin: bool = False
+
+
 # ------------------------------------------------------------------ events (public)
 class EventPublic(BaseModel):
     """Public event view. Never contains secrets, weights or per-entrant data."""

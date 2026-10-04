@@ -1,0 +1,14 @@
+{
+  "name": "fair-drop-root",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Fair Drop Monorepo Root Launcher",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev:full",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix frontend run dev:backend",
+    "dev:mock": "npm --prefix frontend run dev:all",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend run test"
+  }
+}

@@ -8,8 +8,8 @@ import { fileURLToPath, URL } from 'node:url';
 //   /sim/*  -> simulator service
 //   /__mock -> mock-server control endpoints (dev only)
 const MOCK_TARGET = process.env.MOCK_URL ?? 'http://127.0.0.1:8787';
-const API_TARGET = process.env.API_URL ?? MOCK_TARGET;
-const SIM_TARGET = process.env.SIM_URL ?? MOCK_TARGET;
+const API_TARGET = process.env.API_URL ?? 'http://127.0.0.1:8000';
+const SIM_TARGET = process.env.SIM_URL ?? 'http://127.0.0.1:8000';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],

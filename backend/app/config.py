@@ -30,6 +30,13 @@ class Settings(BaseSettings):
 
     beacon_provider: Literal["mock", "drand"] = "mock"
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    mail_from: str = ""
+
+
     @field_validator("database_url", "test_database_url")
     @classmethod
     def _use_psycopg3(cls, v: str) -> str:

@@ -46,10 +46,11 @@ def runtime_env(redis_url: str | None = None) -> dict[str, str]:
     env = dict(os.environ)
     file_env = parse_env_file()
     env.update(file_env)
-    env["DATABASE_URL"] = (
-        f"postgresql://{file_env['POSTGRES_USER']}:{file_env['POSTGRES_PASSWORD']}"
-        f"@127.0.0.1:{file_env['POSTGRES_PORT']}/{file_env['POSTGRES_DB']}"
-    )
+    if "DATABASE_URL" not in file_env:
+        env["DATABASE_URL"] = (
+            f"postgresql://{file_env['POSTGRES_USER']}:{file_env['POSTGRES_PASSWORD']}"
+            f"@127.0.0.1:{file_env['POSTGRES_PORT']}/{file_env['POSTGRES_DB']}"
+        )
     if redis_url:
         env["REDIS_URL"] = redis_url
     elif not env.get("REDIS_URL"):
