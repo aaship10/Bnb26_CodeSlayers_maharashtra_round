@@ -1,0 +1,53 @@
+{
+ "fault": "restart-edge",
+ "state": {
+  "killed": "nginx"
+ },
+ "recovery_seconds": 0.08,
+ "requests_failed": 33,
+ "invariants_passed": true,
+ "outage_seconds": 4.14,
+ "requests_total": 1419,
+ "requests_during_fault": 925,
+ "failures_by_kind": {
+  "ReadError": 1,
+  "ConnectError": 32
+ },
+ "status_codes": {
+  "201": 464,
+  "200": 922,
+  "ReadError": 1,
+  "ConnectError": 32
+ },
+ "held_seconds": 4.0,
+ "heal_command_seconds": 1.46,
+ "edge": "nginx",
+ "users_told_entered": 465,
+ "enter_outcome_unknown": 9,
+ "checks": [
+  {
+   "name": "nobody has two entries",
+   "ok": true
+  },
+  {
+   "name": "every user told 'entered' has an entry (no acknowledged write was lost)",
+   "ok": true
+  },
+  {
+   "name": "entries nobody was told about are only requests that ended in an error",
+   "ok": true
+  },
+  {
+   "name": "every weight is 1.0 / 0.5 / 0.25",
+   "ok": true
+  },
+  {
+   "name": "A's invariant checker passes",
+   "ok": true
+  },
+  {
+   "name": "the system took writes again after healing",
+   "ok": true
+  }
+ ]
+}

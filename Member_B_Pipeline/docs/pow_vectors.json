@@ -1,0 +1,214 @@
+{
+ "rule": "SHA-256(utf8(prefix + ':' + nonce)) has >= bits leading zero bits; nonce is a decimal string; vectors give the SMALLEST nonce",
+ "rule_vectors": [
+  {
+   "prefix": "vector-a",
+   "bits": 0,
+   "nonce": "0",
+   "sha256": "b80e51ee86ed51bea71c8ba9ca08c590a2a90c60a96fda555c9ee2eb7877967b"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 1,
+   "nonce": "1",
+   "sha256": "6319bcfa06efdd414330563902e43ff9ed496ffa032de0a0ec16a66fd972336d"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 4,
+   "nonce": "3",
+   "sha256": "07899e3aa05779c01977f2d75ea8c10998c533d016b43bed0b0de0c3cc95032a"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 8,
+   "nonce": "201",
+   "sha256": "00c60874a639a3fb33cf57eb338a5382bb334ea5116f5cac9ca71ae41bd50b35"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 12,
+   "nonce": "1965",
+   "sha256": "00047879566e32ce745f46b6150029d3095d1e5cd1314e72911671055e1481f6"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 14,
+   "nonce": "35540",
+   "sha256": "0001aacc99bfb8ebcfa8605ca03dfc31744d4de8ca942a0d0de7acaecc9cd110"
+  },
+  {
+   "prefix": "vector-a",
+   "bits": 16,
+   "nonce": "41986",
+   "sha256": "00005e0de592a9c52922a95c49608e6fd265d25a7dd8d3d2d3cd21059b7dae41"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 0,
+   "nonce": "0",
+   "sha256": "6c83731167fc75059d5ba5b826d096fcf568c2af155b8445a57273b39da04b4e"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 1,
+   "nonce": "0",
+   "sha256": "6c83731167fc75059d5ba5b826d096fcf568c2af155b8445a57273b39da04b4e"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 4,
+   "nonce": "4",
+   "sha256": "0cec980e9398d37746c64a997bf1302b8138213dba66a2bd06462243bdbab9ff"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 8,
+   "nonce": "240",
+   "sha256": "00e0ba10c2ee09502e3d7e94cb767f01d31c88cf09528e76864ec0c9a234ea70"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 12,
+   "nonce": "2724",
+   "sha256": "0003f6f6d0401da2d8b4d766ce4b66e35bab4f776d688eca318663f518ba9326"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 14,
+   "nonce": "2724",
+   "sha256": "0003f6f6d0401da2d8b4d766ce4b66e35bab4f776d688eca318663f518ba9326"
+  },
+  {
+   "prefix": "fd1.example.prefix.42",
+   "bits": 16,
+   "nonce": "34793",
+   "sha256": "000018a62ddc6872dbc0d38929d9ab2d4a22f8bf9aed017526a2eabf149fb91c"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 0,
+   "nonce": "0",
+   "sha256": "2f7db07e694b7afd45bb1cfea56f4b2ecb7cf3c074794b39f1d9d4ec61eb4680"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 1,
+   "nonce": "0",
+   "sha256": "2f7db07e694b7afd45bb1cfea56f4b2ecb7cf3c074794b39f1d9d4ec61eb4680"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 4,
+   "nonce": "24",
+   "sha256": "0903272dcc26f00a246a2e117833c6002b6a607902b84c75e95eff357d9d9d0a"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 8,
+   "nonce": "29",
+   "sha256": "001e0f69e417e76ddad32bcf7c6caaf7fe5434cfc7a7b7a36b53359fb34fc485"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 12,
+   "nonce": "5995",
+   "sha256": "000ee941435738cb3a0538afdbd2e308a663fd74c0cd7091508703c1b9aee6b4"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 14,
+   "nonce": "17585",
+   "sha256": "00000bddce487006ac3b90076df66ca314ee0a51b459d4414ac8f5d42f9589b8"
+  },
+  {
+   "prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "bits": 16,
+   "nonce": "17585",
+   "sha256": "00000bddce487006ac3b90076df66ca314ee0a51b459d4414ac8f5d42f9589b8"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 0,
+   "nonce": "0",
+   "sha256": "cba6f3cf1c2dc22e57f98694a4f26099a5f3cbd7d4607857842407813ebba1ad"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 1,
+   "nonce": "1",
+   "sha256": "7884d2eb2235ae6c0f46d19b871a87712fed7ae568a7de5b247c8665b16f70ab"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 4,
+   "nonce": "44",
+   "sha256": "0dc4857b9e7fa167f05b03c4b8416e15c4d7d55d119aac5baef317a0ead07258"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 8,
+   "nonce": "938",
+   "sha256": "00549f09bc665d862b66af57cfff03699ba2f5f88562f0034126a6c4865e314d"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 12,
+   "nonce": "1869",
+   "sha256": "000e1ed45ecd6ab7fed17bb1c629cca3370be637bbaaac00958ca3b817cab28b"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 14,
+   "nonce": "24415",
+   "sha256": "0003089f38160c2184751bb5b1c54c48c37e65d7d1a6140a3198c3488e9ffbd4"
+  },
+  {
+   "prefix": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "bits": 16,
+   "nonce": "71212",
+   "sha256": "00003ddcdc5e16facda5b26cb9b2ab6dd33d76e760ad87d6c221f7ea1322b66f"
+  }
+ ],
+ "token_vectors": {
+  "key": "test-key-0123456789abcdef0123456789abcdef",
+  "event_hex": "11111111111111111111111111111111",
+  "user_hex": "22222222222222222222222222222222",
+  "tokens": [
+   {
+    "kind": "p",
+    "pow_ok": 0,
+    "exp": 2000000000,
+    "bits": 14,
+    "nonce": "0123456789abcdef",
+    "token": "fd1.p0.11111111111111111111111111111111.22222222222222222222222222222222.2000000000.14.0123456789abcdef.c0dc2f9d0d0c1868f8f8583d",
+    "solution": "15682"
+   },
+   {
+    "kind": "p",
+    "pow_ok": 0,
+    "exp": 2000000000,
+    "bits": 8,
+    "nonce": "fedcba9876543210",
+    "token": "fd1.p0.11111111111111111111111111111111.22222222222222222222222222222222.2000000000.8.fedcba9876543210.18d4e7b8581e47e065725ed1",
+    "solution": "27"
+   },
+   {
+    "kind": "c",
+    "pow_ok": 1,
+    "exp": 2000000000,
+    "bits": 0,
+    "nonce": "00000000000000aa",
+    "token": "fd1.c1.11111111111111111111111111111111.22222222222222222222222222222222.2000000000.0.00000000000000aa.3e0bc9f55171b69dbf88b2db"
+   },
+   {
+    "kind": "c",
+    "pow_ok": 0,
+    "exp": 2000000000,
+    "bits": 0,
+    "nonce": "00000000000000bb",
+    "token": "fd1.c0.11111111111111111111111111111111.22222222222222222222222222222222.2000000000.0.00000000000000bb.3a61be27721a5d5e4a26be22"
+   }
+  ]
+ }
+}

@@ -1,0 +1,11 @@
+cidr,asn,name
+# DUMMY table for development: documentation (RFC 5737) and private (RFC 1918 / 6598) ranges only,
+# with made-up AS numbers from the private-use range (RFC 6996). No real network is described.
+10.20.0.0/16,64512,CAMPUS-NAT
+10.30.0.0/16,64513,HOSTEL-WIFI
+192.0.2.0/24,64520,DOC-NET-1
+198.51.100.0/24,64521,DOC-NET-2
+203.0.113.0/24,64522,DOC-NET-3
+172.16.0.0/12,64530,MOBILE-CARRIER-A
+100.64.0.0/10,64531,MOBILE-CARRIER-B
+192.168.0.0/16,64540,HOME-ISP

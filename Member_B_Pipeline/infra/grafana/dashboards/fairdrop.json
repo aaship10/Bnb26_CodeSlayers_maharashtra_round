@@ -1,0 +1,95 @@
+{
+  "title": "Fair Drop: defence and platform",
+  "uid": "fairdrop-defence",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "tags": ["fairdrop"],
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "title": "Requests per second by status", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (status) (rate(fd_http_requests_total[1m]))", "legendFormat": "{{status}}" }]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Latency p50 / p95 / p99 (seconds)", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.50, sum by (le) (rate(fd_http_request_duration_seconds_bucket[1m])))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(fd_http_request_duration_seconds_bucket[1m])))", "legendFormat": "p95" },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum by (le) (rate(fd_http_request_duration_seconds_bucket[1m])))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Gate decisions per second", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (action) (rate(fd_gate_decisions_total[1m]))", "legendFormat": "{{action}}" }]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Entries by weight (allowed decisions)", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (weight) (rate(fd_gate_decisions_total{action=\"ALLOW\"}[1m]))", "legendFormat": "weight {{weight}}" }]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Rate-limited (429) by endpoint and scope", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (endpoint, scope) (rate(fd_rate_limited_total[1m]))", "legendFormat": "{{endpoint}} / {{scope}}" }]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Challenges: issued, solved, failed", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (type) (rate(fd_challenges_issued_total[1m]))", "legendFormat": "issued {{type}}" },
+        { "refId": "B", "expr": "sum by (type) (rate(fd_challenges_solved_total[1m]))", "legendFormat": "solved {{type}}" },
+        { "refId": "C", "expr": "sum by (type, reason) (rate(fd_challenges_failed_total[1m]))", "legendFormat": "failed {{type}} {{reason}}" }
+      ]
+    },
+    {
+      "id": 7, "type": "stat", "title": "Redis circuit open (1 = open)", "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "max(fd_redis_breaker_open)" }]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Redis / Postgres errors per second", "gridPos": { "h": 8, "w": 9, "x": 6, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (op) (rate(fd_redis_errors_total[1m]))", "legendFormat": "redis {{op}}" },
+        { "refId": "B", "expr": "sum by (op) (rate(fd_pg_errors_total[1m]))", "legendFormat": "postgres {{op}}" }
+      ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Requests handled without Redis (by policy)", "gridPos": { "h": 8, "w": 9, "x": 15, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (mode) (rate(fd_limiter_degraded_total[1m]))", "legendFormat": "{{mode}}" },
+        { "refId": "B", "expr": "rate(fd_redis_breaker_trips_total[5m])", "legendFormat": "breaker trips" }
+      ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Decision log: written, dropped, failed, queued", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(fd_decision_log_written)", "legendFormat": "written" },
+        { "refId": "B", "expr": "sum(fd_decision_log_dropped)", "legendFormat": "dropped" },
+        { "refId": "C", "expr": "sum(fd_decision_log_failed_batches)", "legendFormat": "failed batches" },
+        { "refId": "D", "expr": "sum(fd_decision_log_queue)", "legendFormat": "queued" }
+      ]
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "In flight, live streams, draining replicas", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(fd_http_requests_in_flight)", "legendFormat": "in flight" },
+        { "refId": "B", "expr": "sum(fd_sse_streams_open)", "legendFormat": "SSE streams" },
+        { "refId": "C", "expr": "sum(fd_draining)", "legendFormat": "draining replicas" },
+        { "refId": "D", "expr": "sum(rate(fd_sse_streams_closed_for_drain_total[1m]))", "legendFormat": "streams closed for drain /s" }
+      ]
+    },
+    {
+      "id": 12, "type": "timeseries", "title": "Risk bands (assessments per second)", "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (band) (rate(fd_risk_band_total[1m]))", "legendFormat": "{{band}}" }]
+    }
+  ]
+}

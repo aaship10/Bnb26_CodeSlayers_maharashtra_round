@@ -1,0 +1,44 @@
+[
+ {
+  "fault": "kill-replica",
+  "recovery_seconds": 0.08,
+  "requests_failed": 0,
+  "invariants_passed": true,
+  "outage_seconds": 0.0
+ },
+ {
+  "fault": "kill-worker",
+  "recovery_seconds": 0.1,
+  "requests_failed": 0,
+  "invariants_passed": true,
+  "outage_seconds": 0.0
+ },
+ {
+  "fault": "restart-redis",
+  "recovery_seconds": 0.09,
+  "requests_failed": 0,
+  "invariants_passed": true,
+  "outage_seconds": 0.0
+ },
+ {
+  "fault": "pause-postgres",
+  "recovery_seconds": 0.1,
+  "requests_failed": 0,
+  "invariants_passed": true,
+  "outage_seconds": 0.0
+ },
+ {
+  "fault": "terminate-pg-connections",
+  "recovery_seconds": 0.12,
+  "requests_failed": 0,
+  "invariants_passed": true,
+  "outage_seconds": 0.0
+ },
+ {
+  "fault": "restart-edge",
+  "recovery_seconds": 0.08,
+  "requests_failed": 33,
+  "invariants_passed": true,
+  "outage_seconds": 4.14
+ }
+]

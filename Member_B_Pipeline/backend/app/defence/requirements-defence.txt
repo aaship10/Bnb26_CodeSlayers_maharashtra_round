@@ -1,0 +1,11 @@
+# Dependencies of the defence package. A: merge these into backend requirements.
+fastapi>=0.115,<1
+pydantic>=2.8,<3
+psycopg[binary,pool]>=3.2,<4      # async Postgres (Windows: needs a selector event loop, see infra/local/serve.py)
+redis>=5                          # asyncio client, Lua token bucket
+PyJWT>=2.8                        # HS256 session tokens
+aiosmtplib>=3                     # OTP mail via SMTP (optional: file outbox needs no server)
+alembic>=1.13                     # defence-schema migrations
+sqlalchemy>=2                     # used by alembic only
+prometheus-client>=0.20             # /metrics (stage 6)
+# tests/dev only: fakeredis[lua] (Redis stand-in), pytest, pytest-asyncio>=1.4, httpx

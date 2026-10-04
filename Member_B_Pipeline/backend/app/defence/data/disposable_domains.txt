@@ -1,0 +1,19 @@
+# Disposable / throwaway mail domains. SMALL SAMPLE for the demo: replace with a
+# maintained list (one domain per line, '#' comments) before any real use.
+# Subdomains of a listed domain match too.
+mailinator.com
+guerrillamail.com
+guerrillamail.net
+sharklasers.com
+10minutemail.com
+tempmail.com
+temp-mail.org
+yopmail.com
+trashmail.com
+throwawaymail.com
+getnada.com
+maildrop.cc
+dispostable.com
+fakeinbox.com
+mohmal.com
+mintemail.com

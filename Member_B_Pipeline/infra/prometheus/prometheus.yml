@@ -1,0 +1,14 @@
+# OPTIONAL: Prometheus is not installed by this project (no Docker here). The built-in ops page at
+# http://127.0.0.1:8080/ops/ shows the same numbers with nothing to install. If you run Prometheus yourself
+# (a plain binary from prometheus.io works), point it at this file:  prometheus --config.file=infra/prometheus/prometheus.yml
+# UNTESTED on this machine.
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # Each API replica exposes /metrics itself. Scrape the replicas directly: the public gateway deliberately
+  # does not proxy /metrics. Edit the ports to match `fd.ps1 up -N` / API_BASE_PORT.
+  - job_name: fairdrop-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:8001", "127.0.0.1:8002", "127.0.0.1:8003"]

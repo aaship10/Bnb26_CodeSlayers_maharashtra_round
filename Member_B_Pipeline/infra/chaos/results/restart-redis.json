@@ -1,0 +1,48 @@
+{
+ "fault": "restart-redis",
+ "state": {
+  "killed": "redis"
+ },
+ "recovery_seconds": 0.09,
+ "requests_failed": 0,
+ "invariants_passed": true,
+ "outage_seconds": 0.0,
+ "requests_total": 2670,
+ "requests_during_fault": 2189,
+ "failures_by_kind": {},
+ "status_codes": {
+  "201": 890,
+  "200": 1780
+ },
+ "held_seconds": 8.0,
+ "heal_command_seconds": 1.6,
+ "edge": "nginx",
+ "users_told_entered": 891,
+ "enter_outcome_unknown": 0,
+ "checks": [
+  {
+   "name": "nobody has two entries",
+   "ok": true
+  },
+  {
+   "name": "every user told 'entered' has an entry (no acknowledged write was lost)",
+   "ok": true
+  },
+  {
+   "name": "entries nobody was told about are only requests that ended in an error",
+   "ok": true
+  },
+  {
+   "name": "every weight is 1.0 / 0.5 / 0.25",
+   "ok": true
+  },
+  {
+   "name": "A's invariant checker passes",
+   "ok": true
+  },
+  {
+   "name": "the system took writes again after healing",
+   "ok": true
+  }
+ ]
+}
